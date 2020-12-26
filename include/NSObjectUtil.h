@@ -13,7 +13,9 @@
 
 #include <ostream>
 
-
+/**
+ Equality comparison of NSObject * for std::unordered_map, std::unordered_set etc.
+ */
 struct NSObjectEqual
 {
     bool operator()(id<NSObject> lhs, id<NSObject> rhs) const
@@ -23,6 +25,9 @@ struct NSObjectEqual
     }
 };
 
+/**
+ Hash code of NSObject * for std::unordered_map, std::unordered_set etc.
+ */
 struct NSObjectHash
 {
     size_t operator()(id<NSObject> obj) const
@@ -31,6 +36,9 @@ struct NSObjectHash
     }
 };
 
+/**
+ Serialization into ostream
+ */
 inline std::ostream & operator<<(std::ostream & stream, id<NSObject> obj)
 {
     if (!obj)
