@@ -8,6 +8,8 @@
 #include <iostream>
 #include <unordered_map>
 #include <map>
+#include <codecvt>
+
 
 @interface BlockDemo : NSObject
 
@@ -82,6 +84,17 @@ void MapByObjectDemo() {
     std::cout << umap[url2] << '\n';
 }
 
+void NSStringCharAccessDemo() {
+    
+    auto str = @"Hello World";
+    auto access = NSStringCharAccess(str);
+    
+    std::u16string reversed(access.rbegin(), access.rend());
+    
+    std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> cv;
+    std::cout << cv.to_bytes(reversed) << '\n';
+}
+
 int main(int argc, const char * argv[]) {
     
     [[BlockDemo new] callBlock];
@@ -93,6 +106,8 @@ int main(int argc, const char * argv[]) {
     MapByNumberDemo();
     
     MapByObjectDemo();
+    
+    NSStringCharAccessDemo();
     
     return 0;
 }

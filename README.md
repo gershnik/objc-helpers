@@ -54,6 +54,8 @@ The intended usage is
 
 `operator<<` to print to an `std::ostream`. This outputs `UTF8String`.
 
+`NSStringCharAccess` -  a fast accessor for NSString characters via STL container interface. This uses approach similar to `CFStringInlineBuffer` one.
+
 ### `NSNumberUtil.h` ###
 
 `NSNumberLess` comparator. This allows `NSNumber` objects to be used as keys in `std::map` or `std::set` as well as used in STL sorting and searching algorithms.  
