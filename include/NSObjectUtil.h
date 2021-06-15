@@ -13,6 +13,19 @@
 
 #include <ostream>
 
+#if __cpp_lib_format > 201907
+    #include <format>
+#endif
+
+
+#if __has_include(<fmt/format.h>)
+    #define NS_OBJECT_UTIL_USE_FMT
+    #include <fmt/format.h>
+#elif __has_include("fmt/format.h")
+    #define NS_OBJECT_UTIL_USE_FMT
+    #include "fmt/format.h"
+#endif
+
 /**
  Equality comparison of NSObject * for std::unordered_map, std::unordered_set etc.
  */
@@ -49,6 +62,56 @@ inline std::ostream & operator<<(std::ostream & stream, id<NSObject> obj)
     return stream << obj.description.UTF8String;
 }
 
+#if __cpp_lib_format > 201907
 
+/**
+ Serialization into std::format
+ */
+template<class T>
+struct std::formatter<T, std::enable_if_t<std::is_convertible_v<T, id<NSObject>>, char>> : std::formatter<std::string_view>
+{
+    template<class FormatCtx>
+    auto format(id<NSObject> obj, FormatCtx & ctx)
+    {
+        const char * str;
+        
+        if (!obj)
+            str = "<null>";
+        else if ([obj respondsToSelector:@selector(descriptionWithLocale:)])
+            str = [(id)obj descriptionWithLocale:NSLocale.currentLocale].UTF8String;
+        else
+            str = obj.description.UTF8String;
+        
+        return std::formatter<std::string_view>::format(str, ctx);
+    }
+};
+
+#endif
+
+#ifdef NS_OBJECT_UTIL_USE_FMT
+
+/**
+ Serialization into fmt::format
+ */
+template<class T>
+struct fmt::formatter<T, std::enable_if_t<std::is_convertible_v<T, id<NSObject>>, char>> : fmt::formatter<std::string_view>
+{
+    template<class FormatCtx>
+    auto format(id<NSObject> obj, FormatCtx & ctx)
+    {
+        const char * str;
+        
+        if (!obj)
+            str = "<null>";
+        else if ([obj respondsToSelector:@selector(descriptionWithLocale:)])
+            str = [(id)obj descriptionWithLocale:NSLocale.currentLocale].UTF8String;
+        else
+            str = obj.description.UTF8String;
+        
+        return fmt::formatter<std::string_view>::format(str, ctx);
+    }
+};
+
+#endif
 
 #endif

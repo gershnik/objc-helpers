@@ -71,11 +71,62 @@ struct NSStringEqual
     }
 };
 
-
+/**
+ Serialization into ostream
+ */
 inline std::ostream & operator<<(std::ostream & stream, NSString * str)
 {
     return stream << str.UTF8String;
 }
+
+#if __cpp_lib_format > 201907
+
+/**
+ Serialization into std::format
+ */
+template<>
+struct std::formatter<NSString *> : std::formatter<std::string_view>
+{
+    template<class FormatCtx>
+    auto format(NSString * obj, FormatCtx & ctx)
+    {
+        const char * str;
+        
+        if (!obj)
+            str = "<null>";
+        else
+            str = obj.UTF8String;
+        
+        return std::formatter<std::string_view>::format(str, ctx);
+    }
+};
+
+#endif
+
+#ifdef NS_OBJECT_UTIL_USE_FMT
+
+/**
+ Serialization into fmt::format
+ */
+template<>
+struct fmt::formatter<NSString *> : fmt::formatter<std::string_view>
+{
+    template<class FormatCtx>
+    auto format(NSString * obj, FormatCtx & ctx)
+    {
+        const char * str;
+        
+        if (!obj)
+            str = "null";
+        else
+            str = obj.UTF8String;
+        
+        return fmt::formatter<std::string_view>::format(str, ctx);
+    }
+};
+
+#endif
+
 
 /**
  Accessor for NSString characters via STL container interface.
