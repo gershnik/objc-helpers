@@ -54,10 +54,10 @@ namespace BlockUtil
     template<class T, class Ret, class... Args>
     auto makeBlockHelper(T callable, std::function<Ret (Args...)> * dummy) -> Ret (^) (Args...)
     {
-        return ^ (Args... args) {
+        return Block_copy(^ (Args... args) {
           
             return callable(std::forward<Args>(args)...);
-        };
+        });
     }
 
 }
