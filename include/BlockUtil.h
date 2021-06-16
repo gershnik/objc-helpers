@@ -51,14 +51,45 @@ namespace BlockUtil
         return std::function(callable);
     }
 
-    template<class T, class Ret, class... Args>
-    auto makeBlockHelper(T callable, std::function<Ret (Args...)> * dummy) -> Ret (^) (Args...)
+#ifdef __OBJC__
+    namespace ObjC
     {
-        return Block_copy(^ (Args... args) {
-          
-            return callable(std::forward<Args>(args)...);
-        });
+        template<class T, class Ret, class... Args>
+        auto makeBlockHelper(T callable, std::function<Ret (Args...)> * dummy) -> Ret (^) (Args...)
+        {
+            return ^ (Args... args) {
+                
+                return callable(std::forward<Args>(args)...);
+            };
+        }
+
+        template<class T>
+        auto makeBlock(T callable)
+        {
+            using DeducedFunctionType = decltype(deduceFunctionType(callable));
+            return makeBlockHelper(callable, (DeducedFunctionType *) nullptr);
+        }
     }
+#else
+    namespace Cpp
+    {
+        template<class T, class Ret, class... Args>
+        auto makeBlockHelper(T callable, std::function<Ret (Args...)> * dummy) -> Ret (^) (Args...)
+        {
+            return Block_copy(^ (Args... args) {
+                
+                return callable(std::forward<Args>(args)...);
+            });
+        }
+
+        template<class T>
+        auto makeBlock(T callable)
+        {
+            using DeducedFunctionType = decltype(deduceFunctionType(callable));
+            return makeBlockHelper(callable, (DeducedFunctionType *) nullptr);
+        }
+    }
+#endif
 
 }
 
@@ -71,12 +102,11 @@ namespace BlockUtil
  makeBlock(func)
  ```
  */
-template<class T>
-auto makeBlock(T callable)
-{
-    using DeducedFunctionType = decltype(BlockUtil::deduceFunctionType(callable));
-    return BlockUtil::makeBlockHelper(callable, (DeducedFunctionType *) nullptr);
-}
+#ifdef __OBJC__
+    using BlockUtil::ObjC::makeBlock;
+#else
+    using BlockUtil::Cpp::makeBlock;
+#endif
 
 
 /**
