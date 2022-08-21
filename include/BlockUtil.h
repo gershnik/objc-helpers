@@ -55,7 +55,7 @@ namespace BlockUtil
     namespace ObjC
     {
         template<class T, class Ret, class... Args>
-        auto makeBlockHelper(T callable, std::function<Ret (Args...)> * dummy) -> Ret (^) (Args...)
+        auto makeBlockHelper(T callable, std::function<Ret (Args...)> * dummy __attribute__((unused))) -> Ret (^) (Args...)
         {
             return ^ (Args... args) {
                 
@@ -74,7 +74,7 @@ namespace BlockUtil
     namespace Cpp
     {
         template<class T, class Ret, class... Args>
-        auto makeBlockHelper(T callable, std::function<Ret (Args...)> * dummy) -> Ret (^) (Args...)
+        auto makeBlockHelper(T callable, std::function<Ret (Args...)> * dummy __attribute__((unused))) -> Ret (^) (Args...)
         {
             return Block_copy(^ (Args... args) {
                 
