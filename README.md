@@ -29,9 +29,9 @@ The intended usage is
 
 ```objc 
 [foo doBar:makeBlock([weakSelf = makeWeak(self)] () {
-	auto self = makeStrong(weakSelf);
-	if (!self)
-    	    return;
+    auto self = makeStrong(weakSelf);
+    if (!self)
+        return;
     [self doSomething];
 }];
 ```
