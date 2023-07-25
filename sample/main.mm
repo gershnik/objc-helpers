@@ -8,7 +8,6 @@
 #include <iostream>
 #include <unordered_map>
 #include <map>
-#include <codecvt>
 
 
 @interface BlockDemo : NSObject
@@ -91,8 +90,9 @@ void NSStringCharAccessDemo() {
     
     std::u16string reversed(access.rbegin(), access.rend());
     
-    std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> cv;
-    std::cout << cv.to_bytes(reversed) << '\n';
+    str = [NSString stringWithCharacters:(const unichar *)reversed.data() length:reversed.size()];
+    
+    std::cout << str << '\n';
 }
 
 int main(int argc, const char * argv[]) {
