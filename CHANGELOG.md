@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## Unreleased
 
 ### Added
-- CoDispatch.h: A collection of classes and functions that allows you to write **asynchronous** C++ coroutines and generators that execute on GCD dispatch queues. Detailed guide is available [here](https://github.com/gershnik/objc-helpers/doc/CoDispatch.md)
+- CoDispatch.h: A collection of classes and functions that allows you to write **asynchronous** C++ coroutines and generators that execute on GCD dispatch queues. Detailed guide is available [here](https://github.com/gershnik/objc-helpers/blob/v2.0/doc/CoDispatch.md)
 - Ability to subtract `NSStringCharAccess::iterator`s
 - Ability to get starting index of `NSStringCharAccess::iterator` inside its string
 - Extensive unit tests for all functionality
