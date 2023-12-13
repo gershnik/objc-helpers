@@ -40,6 +40,7 @@ struct NSNumberEqual
     bool operator()(NSNumber * lhs, NSNumber * rhs) const
     {
         if (!lhs) return !rhs;
+        if (!rhs) return false;
         return [lhs isEqualToNumber:rhs];
     }
 };
