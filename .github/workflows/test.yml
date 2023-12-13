@@ -9,9 +9,10 @@ on:
       - 'README.md'
       - '.gitignore'
       - 'LICENSE'
-      - 'VERSION'
+      - 'CHANGELOG.md'
       - 'doc/**'
       - 'sample/**'
+      - 'tools/create-release.py'
       - '.github/workflows/publish.yml'
 
 env:

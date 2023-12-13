@@ -27,7 +27,7 @@ jobs:
 
     - name: Zip Headers
       shell: bash
-      run: tar -czf objc-helpers-${{ env.RELEASE_NAME }}.tar.gz include LICENSE VERSION
+      run: tar -czf objc-helpers-${{ env.RELEASE_NAME }}.tar.gz include LICENSE VERSION CHANGELOG.md
 
     - name: Make release
       uses: softprops/action-gh-release@v1
