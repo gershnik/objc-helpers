@@ -1,0 +1,41 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+  push:
+      tags:
+        - 'v*'
+
+jobs:
+  main:
+    runs-on: macOS-13
+    permissions: write-all
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Get release Name
+      shell: python
+      run: |
+        import os
+        ref = os.environ['GITHUB_REF']
+        name = ref[ref.rfind('/') + 2:]
+        with open(os.environ['GITHUB_ENV'], 'w') as env:
+          print('RELEASE_NAME=' + name, file=env) 
+        with open('VERSION', 'wt') as ver:
+          print(name, file=ver) 
+
+    - name: Zip Headers
+      shell: bash
+      run: tar -czf objc-helpers-${{ env.RELEASE_NAME }}.tar.gz include LICENSE VERSION
+
+    - name: Make release
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: true
+        prerelease: false
+        name: ${{ env.RELEASE_NAME }}
+        body: ...edit me...
+        files: |
+          objc-helpers-${{ env.RELEASE_NAME }}.tar.gz
+  
