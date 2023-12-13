@@ -1,14 +1,16 @@
 #import <Foundation/Foundation.h>
 
-#include "../include/BlockUtil.h"
-#include "../include/NSStringUtil.h"
-#include "../include/NSObjectUtil.h"
-#include "../include/NSNumberUtil.h"
+#include "../include/objc-helpers/BlockUtil.h"
+#include "../include/objc-helpers/CoDispatch.h"
+#include "../include/objc-helpers/NSStringUtil.h"
+#include "../include/objc-helpers/NSObjectUtil.h"
+#include "../include/objc-helpers/NSNumberUtil.h"
 
 #include <iostream>
 #include <unordered_map>
 #include <map>
 
+//MARK: - Blocks to Lambdas Demo
 
 @interface BlockDemo : NSObject
 
@@ -31,6 +33,119 @@
 
 @end
 
+//MARK: - GCD Coroutines Demo
+
+DispatchTask<int> CoroutineDemo() {
+    
+    //this runs on the main queue
+    int a = co_await co_dispatch([]() {
+        return 25;
+    });
+    
+    auto conq = dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0);
+    
+    //this runs on the conq queue
+    int b = co_await co_dispatch(conq, []() {
+        return 25;
+    });
+    
+    //here you might be either on main queue (if the async method executed very fast)
+    //or on conq, if not
+    
+    //we can manually await a switch to a different queue
+    co_await resumeOnMainQueue(); //same as resumeOn(dispatch_get_main_queue())
+    
+    
+    //but doing so is wasteful. A simpler way is
+    b = co_await co_dispatch(conq, []() {
+        return 25;
+    }).resumeOnMainQueue(); //same as resumeOn(dispatch_get_main_queue())
+    
+    //we can convert a call with asynchronous callback to an awaitable
+    
+    try {
+        auto str = co_await makeAwaitable<NSString *>([](auto promise) {
+            NSError * err;
+            [NSTask launchedTaskWithExecutableURL:[NSURL fileURLWithPath:@"/bin/bash"]
+                                        arguments:@[@"-c", @"ls"]
+                                            error:&err
+                               terminationHandler:^(NSTask * res){
+                
+                if (res.terminationStatus == 0)
+                    promise.success(@"call succeeded");
+                else
+                    promise.failure(std::runtime_error("fail"));
+            }];
+            if (err)
+                throw std::runtime_error(err.description.UTF8String);
+        });
+        
+        std::cout << str << '\n';
+    } catch (std::exception & ex) {
+        //failure passed to promise will be caught here
+    }
+    
+    co_return a + b;
+}
+
+DispatchTask<> CoroutineAwaitingCoroutineDemo() {
+    
+    // DispatchTasks are themselves awaitable
+    
+    int res = co_await CoroutineDemo();
+    
+    //and they also can be told to resume on a specified queue
+    
+    res = co_await CoroutineDemo().resumeOn(dispatch_get_main_queue()); // or .resumeOnMainQueue()
+}
+
+DispatchGenerator<NSString *> AsyncGenerator() {
+    co_yield @"Hello";
+    co_yield co_await co_dispatch([] () {
+        return @" World!";
+    });
+}
+
+DispatchTask<> UsingGeneratorDemo() {
+    
+    //running generator asynchronously on the main queue
+    auto dest = [NSMutableString new];
+    for (auto it = co_await AsyncGenerator().begin(); it; co_await it.next()) {
+        [dest appendString:*it];
+    }
+    std::cout << dest << '\n';
+    
+    //you can also control the queue generator runs on and the queue your loop
+    //will resume on
+    auto conq = dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0);
+    dest = [NSMutableString new];
+    for (auto it = co_await AsyncGenerator().resumingOnMainQueue().beginOn(conq); it; co_await it.next()) {
+        [dest appendString:*it];
+    }
+    std::cout << dest << '\n';
+}
+
+void CoroutineRunner() {
+    
+    //lets run our coroutines on the main loop
+    
+    bool shouldKeepRunning = true;
+    
+    auto executeAsyncDemos = [&]() -> DispatchTask<> {
+        co_await CoroutineAwaitingCoroutineDemo();
+        co_await UsingGeneratorDemo();
+        shouldKeepRunning = false;
+    };
+    
+    //if you don't await a coroutine it executes on its own asynchronously
+    executeAsyncDemos();
+    
+    NSRunLoop * theRL = [NSRunLoop currentRunLoop];
+    while (shouldKeepRunning && [theRL runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]);
+}
+
+//MARK: - Printing ObjectiveC objects to iostreams
+
 void IOStreamDemo() {
     
     std::cout << @"abc" << '\n';
@@ -38,6 +153,8 @@ void IOStreamDemo() {
     std::cout << @[@1, @2, @3] << '\n';
     std::cout << [NSError errorWithDomain:NSURLErrorDomain code:1 userInfo:nil] << '\n';
 }
+
+//MARK: - Using ObjectiveC objects as keys in maps
 
 void MapByStringDemo() {
     
@@ -83,6 +200,8 @@ void MapByObjectDemo() {
     std::cout << umap[url2] << '\n';
 }
 
+//MARK: - Treating NSString as an STL container
+
 void NSStringCharAccessDemo() {
     
     auto str = @"Hello World";
@@ -94,6 +213,8 @@ void NSStringCharAccessDemo() {
     
     std::cout << str << '\n';
 }
+
+//MARK: - main
 
 int main(int argc, const char * argv[]) {
     
@@ -108,6 +229,8 @@ int main(int argc, const char * argv[]) {
     MapByObjectDemo();
     
     NSStringCharAccessDemo();
+    
+    CoroutineRunner();
     
     return 0;
 }
