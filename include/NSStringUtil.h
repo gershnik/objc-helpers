@@ -181,6 +181,8 @@ public:
         
         friend difference_type operator-(const const_iterator & lhs, const const_iterator & rhs) noexcept
             { return lhs._idx - rhs._idx; }
+        friend const_iterator operator-(const const_iterator & lhs, int rhs) noexcept
+            { return const_iterator(lhs._owner, lhs._idx - rhs); }
         
         friend bool operator==(const const_iterator & lhs, const const_iterator & rhs) noexcept
             { return lhs._idx == rhs._idx; }
@@ -194,6 +196,9 @@ public:
             { return lhs._idx > rhs._idx; }
         friend bool operator>=(const const_iterator & lhs, const const_iterator & rhs) noexcept
             { return lhs._idx >= rhs._idx; }
+        
+        CFIndex index() const noexcept
+            { return _idx; }
     private:
         const_iterator(const NSStringCharAccess * owner, CFIndex idx) noexcept:
             _owner(owner),
@@ -254,7 +259,7 @@ public:
         { return _size; }
     
     bool empty() const noexcept
-        { return _size; }
+        { return _size == 0; }
     
     const_iterator begin() const noexcept
         { return const_iterator(this, 0); }
@@ -279,7 +284,7 @@ private:
     {
         if ((_start = idx - 4) < 0)
             _start = 0;
-        _end = _start + std::size(_buffer.indirect);
+        _end = _start + CFIndex(std::size(_buffer.indirect));
         if (_end > _size)
             _end = _size;
         CFStringGetCharacters(_string, CFRangeMake(_start, _end - _start), _buffer.indirect);
