@@ -421,7 +421,7 @@ inline namespace CO_DISPATCH_NS {
                 }
             }
             
-            //Client interface
+            //Client awaiter interface
             //These methods can only be called when server is known to be suspended
             
             /**
@@ -456,7 +456,14 @@ inline namespace CO_DISPATCH_NS {
             requires(!X::isVoid)
             static decltype(auto) moveOutValue(typename X::ValueToken token) noexcept(noexcept(X::moveOutValue(token)))
                 { return X::moveOutValue(token); }
-            void setResumeQueue(dispatch_queue_t __nullable queue)
+            
+            //Client awaitable interface
+            //These methods can only be called by client _before_ it awaits
+            
+            /**
+             Specify a queue on which resume client
+             */
+            void setResumeQueue(dispatch_queue_t __nullable queue) noexcept
                 { m_resumeQueue = queue; }
             
             
