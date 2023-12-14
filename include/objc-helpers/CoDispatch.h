@@ -972,6 +972,40 @@ inline namespace CO_DISPATCH_NS {
         
         class Iterator {
             friend DispatchGenerator;
+        private:
+            struct FirstAwaitable {
+                Util::ClientAbandonPtr<Promise> m_promise;
+                Util::QueueHolder m_queue;
+                
+                void operator co_await() & = delete;
+                void operator co_await() const & = delete;
+                auto operator co_await() && noexcept  {
+                    struct awaiter : AwaiterBase {
+                        Util::QueueHolder queue;
+                        auto await_resume() noexcept(noexcept(AwaiterBase::promise->getValueToken())) -> Iterator {
+                            return Iterator(std::move(AwaiterBase::promise), queue, AwaiterBase::promise->getValueToken());
+                        }
+                    };
+                    return awaiter{{std::move(m_promise)}, Util::QueueHolder{m_queue}};
+                };
+            };
+            struct NextAwaitable {
+                Util::ClientAbandonPtr<Promise> promise;
+                Iterator * __nonnull it;
+                
+                void operator co_await() & = delete;
+                void operator co_await() const & = delete;
+                auto operator co_await() && noexcept  {
+                    struct awaiter : AwaiterBase {
+                        Iterator * __nonnull it;
+                        void await_resume() noexcept(noexcept(it->m_promise->getValueToken())) {
+                            it->m_promise = std::move(AwaiterBase::promise);
+                            it->m_valueToken = it->m_promise->getValueToken();
+                        }
+                    };
+                    return awaiter{{std::move(promise)}, it};
+                }
+            };
         public:
             Iterator(Iterator && src) noexcept = default;
             
@@ -980,14 +1014,7 @@ inline namespace CO_DISPATCH_NS {
             auto next() noexcept {
                 m_valueToken = nullptr;
                 m_promise->resumeExecution(m_queue);
-                struct awaiter : AwaiterBase {
-                    Iterator * me;
-                    void await_resume() noexcept(noexcept(me->m_promise->getValueToken())) {
-                        me->m_promise = std::move(AwaiterBase::promise);
-                        me->m_valueToken = me->m_promise->getValueToken();
-                    }
-                };
-                return awaiter{{std::move(m_promise)}, this};
+                return NextAwaitable{{std::move(m_promise)}, this};
             }
             operator bool() const noexcept {
                 return m_valueToken;
@@ -1006,14 +1033,7 @@ inline namespace CO_DISPATCH_NS {
         
         auto beginOn(dispatch_queue_t __nullable queue) && noexcept {
             m_promise->resumeExecution(queue);
-            struct awaiter : AwaiterBase {
-                Util::QueueHolder queue;
-                
-                auto await_resume() noexcept(noexcept(AwaiterBase::promise->getValueToken())) -> Iterator {
-                    return Iterator(std::move(AwaiterBase::promise), queue, AwaiterBase::promise->getValueToken());
-                }
-            };
-            return awaiter{{std::move(m_promise)}, Util::QueueHolder{queue}};
+            return typename Iterator::FirstAwaitable{{std::move(m_promise)}, Util::QueueHolder{queue}};
         }
         
         auto begin() && noexcept
