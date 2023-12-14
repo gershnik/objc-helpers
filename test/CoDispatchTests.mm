@@ -69,6 +69,7 @@ struct CopyableAndMovable {
     int value;
 };
 
+template<bool Noexcept = false>
 struct CopyableOnly {
     
     static auto sequence() -> Sequence<CopyableOnly> & {
@@ -76,19 +77,19 @@ struct CopyableOnly {
         return ret;
     }
     
-    CopyableOnly() : value(0) {
+    CopyableOnly() noexcept(Noexcept) : value(0) {
         sequence().add(this, "c()");
     }
-    CopyableOnly(int v) : value(v) {
+    CopyableOnly(int v) noexcept(Noexcept) : value(v) {
         sequence().add(this, "c(int)");
     }
     ~CopyableOnly() {
         sequence().add(this, "~d()");
     }
-    CopyableOnly(const CopyableOnly & src) : value(src.value) {
+    CopyableOnly(const CopyableOnly & src) noexcept(Noexcept) : value(src.value) {
         sequence().add(this, "c(const&)");
     }
-    CopyableOnly & operator=(const CopyableOnly & src) {
+    CopyableOnly & operator=(const CopyableOnly & src) noexcept(Noexcept) {
         sequence().add(this, "=(const&)");
         value = src.value;
         return *this;
@@ -97,6 +98,7 @@ struct CopyableOnly {
     int value;
 };
 
+template<bool Noexcept = true>
 struct MovableOnly {
     
     static auto sequence() -> Sequence<MovableOnly> & {
@@ -104,19 +106,19 @@ struct MovableOnly {
         return ret;
     }
     
-    MovableOnly() : value(0) {
+    MovableOnly() noexcept(Noexcept): value(0) {
         sequence().add(this, "c()");
     }
-    MovableOnly(int v) : value(v) {
+    MovableOnly(int v) noexcept(Noexcept) : value(v) {
         sequence().add(this, "c(int)");
     }
     ~MovableOnly() {
         sequence().add(this, "~d()");
     }
-    MovableOnly(MovableOnly && src) : value(std::exchange(src.value, 0)) {
+    MovableOnly(MovableOnly && src) noexcept(Noexcept) : value(std::exchange(src.value, 0)) {
         sequence().add(this, "c(&&)");
     }
-    MovableOnly & operator=(MovableOnly && src) {
+    MovableOnly & operator=(MovableOnly && src) noexcept(Noexcept) {
         sequence().add(this, "=(&&)");
         if (this != &src)
             value = std::exchange(src.value, 0);
@@ -130,6 +132,26 @@ float aFloat = 0.7f;
 void * aPointer = &aFloat;
 typedef void FuncType();
 void aFunc() {}
+
+static_assert(noexcept(Util::ValueCarrier<int, SupportsExceptions::No>().moveOut()));
+static_assert(noexcept(Util::ValueCarrier<int, SupportsExceptions::No>().getValueToken()));
+static_assert(noexcept(Util::ValueCarrier<FuncType *, SupportsExceptions::No>().moveOut()));
+static_assert(noexcept(Util::ValueCarrier<FuncType *, SupportsExceptions::No>().getValueToken()));
+static_assert(noexcept(Util::ValueCarrier<void, SupportsExceptions::No>().moveOut()));
+static_assert(noexcept(Util::ValueCarrier<MovableOnly<true>, SupportsExceptions::No>().moveOut()));
+static_assert(noexcept(Util::ValueCarrier<MovableOnly<true>, SupportsExceptions::No>().getValueToken()));
+
+static_assert(!noexcept(Util::ValueCarrier<MovableOnly<false>, SupportsExceptions::No>().moveOut()));
+static_assert(noexcept(Util::ValueCarrier<MovableOnly<false>, SupportsExceptions::No>().getValueToken()));
+static_assert(!noexcept(Util::ValueCarrier<MovableOnly<false>, SupportsExceptions::No>::moveOutValue(nullptr)));
+
+static_assert(noexcept(Util::ValueCarrier<CopyableOnly<true>, SupportsExceptions::No>().moveOut()));
+static_assert(noexcept(Util::ValueCarrier<CopyableOnly<true>, SupportsExceptions::No>().getValueToken()));
+static_assert(noexcept(Util::ValueCarrier<CopyableOnly<true>, SupportsExceptions::No>::moveOutValue(nullptr)));
+
+static_assert(!noexcept(Util::ValueCarrier<CopyableOnly<false>, SupportsExceptions::No>().moveOut()));
+static_assert(noexcept(Util::ValueCarrier<CopyableOnly<false>, SupportsExceptions::No>().getValueToken()));
+static_assert(!noexcept(Util::ValueCarrier<CopyableOnly<false>, SupportsExceptions::No>::moveOutValue(nullptr)));
 
 template<class T>
 decltype(auto) delay(NSTimeInterval interval, T && val) {
@@ -214,25 +236,25 @@ static auto checkReturnPropagation() -> DispatchTask<> {
     }
     CHECK(CopyableAndMovable::sequence().value == "1:c(int)2:c(const&)1:~d()3:c(&&)2:~d()3:~d()");
     
-    CopyableOnly::sequence().clear();
+    CopyableOnly<false>::sequence().clear();
     {
-        decltype(auto) res = co_await co_dispatch([&]() -> CopyableOnly {
-            return CopyableOnly{8};
+        decltype(auto) res = co_await co_dispatch([&]() -> CopyableOnly<false> {
+            return CopyableOnly<false>{8};
         });
-        static_assert(std::is_same_v<decltype(res), CopyableOnly>);
+        static_assert(std::is_same_v<decltype(res), CopyableOnly<false>>);
         CHECK(res.value == 8);
     }
-    CHECK(CopyableOnly::sequence().value == "1:c(int)2:c(const&)1:~d()3:c(const&)2:~d()3:~d()");
+    CHECK(CopyableOnly<false>::sequence().value == "1:c(int)2:c(const&)1:~d()3:c(const&)2:~d()3:~d()");
     
-    MovableOnly::sequence().clear();
+    MovableOnly<false>::sequence().clear();
     {
-        decltype(auto) res = co_await co_dispatch([&]() -> MovableOnly {
-            return MovableOnly{8};
+        decltype(auto) res = co_await co_dispatch([&]() -> MovableOnly<false> {
+            return MovableOnly<false>{8};
         });
-        static_assert(std::is_same_v<decltype(res), MovableOnly>);
+        static_assert(std::is_same_v<decltype(res), MovableOnly<false>>);
         CHECK(res.value == 8);
     }
-    CHECK(MovableOnly::sequence().value == "1:c(int)2:c(&&)1:~d()3:c(&&)2:~d()3:~d()");
+    CHECK(MovableOnly<false>::sequence().value == "1:c(int)2:c(&&)1:~d()3:c(&&)2:~d()3:~d()");
     
     try {
         co_await co_dispatch([&]() {
