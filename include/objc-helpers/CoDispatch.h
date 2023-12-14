@@ -347,6 +347,8 @@ inline namespace CO_DISPATCH_NS {
              */
             auto isReady() const noexcept -> bool {
                 if (m_resumeQueue) {
+                    if (m_when != DISPATCH_TIME_NOW)
+                        return false;
                     m_awaiterOnResumeQueue = isCurrentQueue(m_resumeQueue);
                     if (!m_awaiterOnResumeQueue)
                         return false;
@@ -365,9 +367,7 @@ inline namespace CO_DISPATCH_NS {
                 assert(oldState != s_notStartedMarker && oldState != s_abandonedMarker);
                 if (oldState != s_runningMarker) {
                     if (m_resumeQueue && !m_awaiterOnResumeQueue) {
-                        dispatch_async_f(m_resumeQueue, reinterpret_cast<void *>(h.address()), [](void * addr) {
-                            std::coroutine_handle<>::from_address(addr).resume();
-                        });
+                        resumeHandleAsync(h.address());
                         return true;
                     }
                     return false;
@@ -380,6 +380,7 @@ inline namespace CO_DISPATCH_NS {
              */
             auto resumeExecution(dispatch_queue_t __nullable queue) noexcept {
                 m_value.clear();
+                m_awaiterOnResumeQueue = false;
                 [[maybe_unused]] auto oldstate = m_state.exchange(s_runningMarker, std::memory_order_acq_rel);
                 assert(oldstate != s_runningMarker && oldstate != s_abandonedMarker);
                 auto myHandle = std::coroutine_handle<BasicPromise>::from_promise(*this);
@@ -414,9 +415,7 @@ inline namespace CO_DISPATCH_NS {
                     if (!m_resumeQueue || isCurrentQueue(m_resumeQueue)) {
                         std::coroutine_handle<>::from_address(reinterpret_cast<void *>(oldState)).resume();
                     } else {
-                        dispatch_async_f(m_resumeQueue, reinterpret_cast<void *>(oldState), [](void * addr) {
-                            std::coroutine_handle<>::from_address(addr).resume();
-                        });
+                        resumeHandleAsync(reinterpret_cast<void *>(oldState));
                     }
                 }
             }
@@ -463,8 +462,10 @@ inline namespace CO_DISPATCH_NS {
             /**
              Specify a queue on which resume client
              */
-            void setResumeQueue(dispatch_queue_t __nullable queue) noexcept
-                { m_resumeQueue = queue; }
+            void setResumeQueue(dispatch_queue_t __nullable queue, dispatch_time_t when) noexcept {
+                m_resumeQueue = queue;
+                m_when = when;
+            }
             
             
             //Server interface
@@ -512,6 +513,18 @@ inline namespace CO_DISPATCH_NS {
                 return ret;
             }
             
+            void resumeHandleAsync(void * __nonnull handleAddr) {
+                
+                auto resumer = [](void * addr) {
+                    std::coroutine_handle<>::from_address(addr).resume();
+                };
+                
+                if (m_when == DISPATCH_TIME_NOW)
+                    dispatch_async_f(m_resumeQueue, handleAddr, resumer);
+                else
+                    dispatch_after_f(m_when, m_resumeQueue, handleAddr, resumer);
+            }
+            
         private:
             static constexpr uintptr_t s_runningMarker = 0;
             static constexpr uintptr_t s_notStartedMarker = 1;
@@ -520,6 +533,7 @@ inline namespace CO_DISPATCH_NS {
             
             std::atomic<uintptr_t> m_state = s_runningMarker;
             QueueHolder m_resumeQueue;
+            dispatch_time_t m_when;
             mutable bool m_awaiterOnResumeQueue = false;
             DelayedValue m_value;
         };
@@ -669,12 +683,13 @@ inline namespace CO_DISPATCH_NS {
             return awaiter{std::move(m_sharedState)};
         }
         
-        auto resumeOn(dispatch_queue_t __nullable queue) && noexcept -> DispatchAwaitable && {
-            m_sharedState->setResumeQueue(queue);
+        auto resumeOn(dispatch_queue_t __nullable queue,
+                      dispatch_time_t when = DISPATCH_TIME_NOW) && noexcept -> DispatchAwaitable && {
+            m_sharedState->setResumeQueue(queue, when);
             return std::move(*this);
         }
-        auto resumeOnMainQueue() && noexcept -> DispatchAwaitable &&
-            { return std::move(*this).resumeOn(dispatch_get_main_queue()); }
+        auto resumeOnMainQueue(dispatch_time_t when = DISPATCH_TIME_NOW) && noexcept -> DispatchAwaitable &&
+            { return std::move(*this).resumeOn(dispatch_get_main_queue(), when); }
         
         template<class Func>
         requires(std::is_invocable_v<FunctionFromReference<Func>>)
@@ -872,12 +887,12 @@ inline namespace CO_DISPATCH_NS {
         }
         
         
-        auto resumeOn(dispatch_queue_t __nullable queue) && noexcept -> DispatchTask && {
-            m_promise->setResumeQueue(queue);
+        auto resumeOn(dispatch_queue_t __nullable queue, dispatch_time_t when = DISPATCH_TIME_NOW) && noexcept -> DispatchTask && {
+            m_promise->setResumeQueue(queue, when);
             return std::move(*this);
         }
-        auto resumeOnMainQueue() && noexcept -> DispatchTask &&
-            { return std::move(*this).resumeOn(dispatch_get_main_queue()); }
+        auto resumeOnMainQueue(dispatch_time_t when = DISPATCH_TIME_NOW) && noexcept -> DispatchTask &&
+            { return std::move(*this).resumeOn(dispatch_get_main_queue(), when); }
         
     private:
         DispatchTask(Promise * __nonnull promise) noexcept :
@@ -1008,7 +1023,7 @@ inline namespace CO_DISPATCH_NS {
             { return std::move(*this).beginOn(nullptr); }
         
         auto resumingOn(dispatch_queue_t __nullable queue) && noexcept -> DispatchGenerator && {
-            m_promise->setResumeQueue(queue);
+            m_promise->setResumeQueue(queue, DISPATCH_TIME_NOW);
             return std::move(*this);
         }
         auto resumingOnMainQueue() && noexcept -> DispatchGenerator &&
@@ -1027,16 +1042,23 @@ inline namespace CO_DISPATCH_NS {
     
     /**
      @function
-     `co_await`ing this will resume the coroutine on a given queue
+     `co_await`ing this will resume the coroutine on a given queue optionally on or after a given time
+     
+     If you pass your qurrent queue and non default `when` this is equivalent to an asyncrounous sleep
+     until `when` - now.
      */
-    inline auto resumeOn(dispatch_queue_t __nonnull queue) noexcept {
+    inline auto resumeOn(dispatch_queue_t __nonnull queue, dispatch_time_t when = DISPATCH_TIME_NOW) noexcept {
         struct Awaitable
         {
             dispatch_queue_t queue;
+            dispatch_time_t when;
             auto await_ready() noexcept
                 { return false; }
             void await_suspend(std::coroutine_handle<> h) noexcept {
-                dispatch_async_f(queue, h.address(), Awaitable::resume);
+                if (when == DISPATCH_TIME_NOW)
+                    dispatch_async_f(queue, h.address(), Awaitable::resume);
+                else
+                    dispatch_after_f(when, queue, h.address(), Awaitable::resume);
             }
             void await_resume() noexcept
                 {}
@@ -1046,15 +1068,18 @@ inline namespace CO_DISPATCH_NS {
                 h.resume();
             }
         };
-        return Awaitable{queue};
+        return Awaitable{queue, when};
     }
     
     /**
      @function
-     `co_await`ing this will resume a coroutine on the main queue
+     `co_await`ing this will resume a coroutine on the main queue optionally on or after a given time
+     
+     If you are already on the main queue and pass non default  `when` this is equivalent to an asyncrounous sleep
+     until `when` - now.
      */
-    inline auto resumeOnMainQueue() noexcept {
-        return resumeOn(dispatch_get_main_queue());
+    inline auto resumeOnMainQueue(dispatch_time_t when = DISPATCH_TIME_NOW) noexcept {
+        return resumeOn(dispatch_get_main_queue(), when);
     }
     
     //MARK: - Dispatch IO wrappers

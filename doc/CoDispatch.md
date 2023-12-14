@@ -138,7 +138,7 @@ If the dispatched call takes more time, `co_await` will suspend the caller and t
 
 But what if, as so often happens you want to make sure that the resumed code runs on a specific queue? This is often the case with UI code running on the main queue is delegating work to background tasks and need to resume on the main queue to update the UI with the results of computation. You can easily accomplish this via:
 
-```objc++
+```c++
 auto queue = dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0);
 auto myq = dispatch_get_main_queue();
 co_await co_dispatch(queue, [](){
@@ -146,9 +146,9 @@ co_await co_dispatch(queue, [](){
 }).resumeOn(myq);
 ```
 
-or more succinctly:
+If the resumption queue is the main queue you cal also use `resumeOnMainQueue`
 
-```objc++
+```c++
 auto queue = dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0);
 co_await co_dispatch(queue, [](){
 
@@ -165,9 +165,26 @@ Why isn't there a way to say "resume on the current queue"?  This is because, Ap
 
 It is, however, still possible to ask "is a given queue the same one I am currently running on" thought it needs a little trick[^2]. This is how `resumeOn` avoid queue switch if the given queue happens to be the current one.
 
-
 [^1]: This might have something to do with the fact that "the current queue" as such is the wrong entity to execute on since it might be a delegated part of another queue or a sequence of them.
 [^2]: See `isCurrentQueue` method of `BasicPromise` class in the [header][header] for the trick 
+
+### Resuming with delay
+
+It is also possible to request that the resumption happens no-earlier-than some specified time. This is useful in situations where you want ensure a certain delay or to avoid spamming the main thread.
+
+You can accomplish this by passing optional `when` parameter to `resumeOn` or `resumeOnMainQueue`. This argument is of type [`dispatch_time_t`][dispatch_time_t]. Here is how to delay resumptions by 200ms
+
+```c++
+#include <chrono>
+
+using namespace std::literals;
+
+co_await co_dispatch(queue, [](){
+
+}).resumeOn(anotherQueue, dispatch_time(DISPATCH_TIME_NOW, nanoseconds(200ms).count()));
+```
+
+If you request a delay then the resumption will *always* be asynchronous even if the resumption queue is the same as your current queue.
 
 ### Exceptions
 
@@ -245,7 +262,7 @@ The tasks are reference counted and will self destruct once they run to completi
 
 On occasion it might be convenient to simply switch coroutine execution to a different queue. While it is possible to accomplish it with `co_dispatch` and an empty lambda, a simple transition like this can be done much more efficiently. The library provides standalone functions that do so
 
-```objc++
+```c++
 co_await resumeOn(someQueue);
 //and
 co_await resumeOnMainQueue();
@@ -254,6 +271,26 @@ co_await resumeOnMainQueue();
 This accomplishes the switch in the fastest possible manner without any extra overhead. The awaitable returned by these methods has the same behavior as any other awaitable in this library: single await only and needs to be `std::move`d if stored.
 
 Both methods never throw exceptions and can be used in `catch` handlers to ensure running on a desired queue.
+
+Both methods also allow for an optional `when` argument of type [`dispatch_time_t`][dispatch_time_t] that requests that the resumption happens no-earlier-than specified time. 
+
+```c++
+co_await resumeOn(someQueue, when);
+//and
+co_await resumeOnMainQueue(when);
+```
+
+> ℹ️ If you specify `when` and target the same queue as you are currently on these methods allow you to _sleep asynchronously_.
+
+For example here is how to sleep for 1 second on the main queue without blocking the UI thread
+
+```c++
+#include <chrono>
+
+using namespace std::literals;
+
+co_await resumeOnMainQueue(dispatch_time(DISPATCH_TIME_NOW, nanoseconds(1s).count()));
+```
 
 ## Converting callbacks
 
@@ -342,6 +379,8 @@ try {
 }
 
 ```
+
+And just like with `co_dispatch` you can also pass `when` argument to `resumeOn` or `resumeOnMainQueue` to request that the resumption happen no-earlier-than the specified time.
 
 In general, all the rules that apply to the awaitable returned by `co_dispatch` also apply to the one retuned by `makeAwaitable`. You can delay calling `co_await` or not call it all (though in that case there seems to be no point in using `makeAwaitable` at all - you could just call the wrapped function).
 
@@ -840,6 +879,7 @@ As explained in the [previous section](#usage-of-coroutines-across-cpp-and-mm-fi
 [header]: ../include/objc-helpers/CoDispatch.h
 [for-await]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of
 [odr]: https://en.cppreference.com/w/cpp/language/definition
+[dispatch_time_t]: https://developer.apple.com/documentation/dispatch/dispatch_time_t?language=objc
 
 <!-- End Links --->
 

@@ -9,6 +9,10 @@
 #include <string_view>
 #include <map>
 #include <filesystem>
+#include <chrono>
+
+using namespace std::literals;
+using namespace std::chrono;
 
 template<class T>
 struct Sequence {
@@ -350,6 +354,12 @@ static auto checkDispatchToDifferentQueue() -> DispatchTask<> {
     co_await resumeOn(conq);
     CHECK(!NSThread.isMainThread);
     
+    co_await resumeOnMainQueue(dispatch_time(DISPATCH_TIME_NOW, nanoseconds(200ms).count()));
+    CHECK(NSThread.isMainThread);
+    
+    co_await resumeOn(conq, dispatch_time(DISPATCH_TIME_NOW, nanoseconds(200ms).count()));
+    CHECK(!NSThread.isMainThread);
+    
     i = co_await delay(0.2, co_dispatch(dispatch_get_main_queue(), []() {
         return 3;
     }));
@@ -487,6 +497,7 @@ static auto checkTasks() -> DispatchTask<> {
     }
     
     co_await resumeOnMainQueue();
+    CHECK(NSThread.isMainThread);
     
     
     auto coro = []() -> DispatchTask<int> {
@@ -497,6 +508,13 @@ static auto checkTasks() -> DispatchTask<> {
     };
     
     co_await coro().resumeOnMainQueue();
+    CHECK(NSThread.isMainThread);
+    
+    co_await coro().resumeOnMainQueue(dispatch_time(DISPATCH_TIME_NOW, nanoseconds(200ms).count()));
+    CHECK(NSThread.isMainThread);
+    
+    co_await delay(0.2, coro().resumeOnMainQueue(dispatch_time(DISPATCH_TIME_NOW, nanoseconds(1ms).count())));
+    CHECK(NSThread.isMainThread);
 }
 
 static auto checkGenerator() -> DispatchTask<> {
