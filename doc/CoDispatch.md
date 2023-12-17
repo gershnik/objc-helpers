@@ -642,7 +642,7 @@ The rules of using `Iterator` objects are as follows:
 
 The loop in the example above demonstrates how to canonically iterate following all the rules.
 
-> ℹ️️ Why require `it.next()` rather than "natural" `++it` for iterator increment? The problem is that `++it` canonically returns a reference to the iterator. Not that anybody ever uses it but that what it is supposed to do. The "increment" in this case return an awaitable that needs to be `co_awaited`. Thus I've decided to make the spelling different to avoid unintentionally confusing some generic code. 
+> ℹ️️ Why require `it.next()` rather than "natural" `++it` for iterator increment? The problem is that `++it` canonically returns a reference to the iterator. Not that anybody ever uses it but that what it is supposed to do. The "increment" in this case returns an awaitable that needs to be `co_awaited`. Thus I've decided to make the spelling different to avoid unintentionally confusing some generic code. 
 
 There is no requirement to run the iteration to completion. Abandoning the iterator will destroy the generator. Immediately if it is suspended or once it reaches a suspension point, if not.
 
