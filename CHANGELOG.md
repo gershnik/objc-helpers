@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## [2.1] - 2023-12-16
+
 ### Added
 - all variants of `resumeOn` and `resumeOnMainQueue` now accept `when` argument to request that the resumption happens no earlier than the specified time. When used with `co_await resumeOn(currentQueue, when)` this allows the caller to sleep asynchronously without blocking its queue.
 
@@ -34,3 +36,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 [1.0]: https://github.com/gershnik/objc-helpers/releases/tag/v1.0
 [1.1]: https://github.com/gershnik/objc-helpers/releases/tag/v1.1[2.0]: https://github.com/gershnik/objc-helpers/releases/v2.0
+[2.1]: https://github.com/gershnik/objc-helpers/releases/v2.1
