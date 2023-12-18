@@ -406,18 +406,19 @@ inline namespace CO_DISPATCH_NS {
             /**
              Indicates that server has completed processing and is suspended
              */
-            void serverComplete() noexcept {
+            auto serverComplete() noexcept -> std::coroutine_handle<> {
                 auto oldState = m_state.exchange(s_completedMarker, std::memory_order_acq_rel);
                 assert(oldState != s_completedMarker && oldState != s_notStartedMarker);
                 if (oldState == s_abandonedMarker) {
                     static_cast<const Derived *>(this)->destroy();
                 } else if (oldState != s_runningMarker) {
                     if (!m_resumeQueue || isCurrentQueue(m_resumeQueue)) {
-                        std::coroutine_handle<>::from_address(reinterpret_cast<void *>(oldState)).resume();
+                        return std::coroutine_handle<>::from_address(reinterpret_cast<void *>(oldState));
                     } else {
                         resumeHandleAsync(reinterpret_cast<void *>(oldState));
                     }
                 }
+                return std::noop_coroutine();
             }
             
             //Client awaiter interface
@@ -533,7 +534,7 @@ inline namespace CO_DISPATCH_NS {
             
             std::atomic<uintptr_t> m_state = s_runningMarker;
             QueueHolder m_resumeQueue;
-            dispatch_time_t m_when;
+            dispatch_time_t m_when = DISPATCH_TIME_NOW;
             mutable bool m_awaiterOnResumeQueue = false;
             DelayedValue m_value;
         };
@@ -596,7 +597,8 @@ inline namespace CO_DISPATCH_NS {
                     //remember, refcounting is for server (Promise) only!
                     //it is safe to cast in this case because the object is non const to begin with
                     //and destruction is outside of constness purview
-                    const_cast<State *>(this)->serverComplete();
+                    auto h = const_cast<State *>(this)->serverComplete();
+                    h.resume();
                 }
             }
             
@@ -853,8 +855,8 @@ inline namespace CO_DISPATCH_NS {
                 struct awaiter {
                     Promise & me;
                     constexpr bool await_ready() const noexcept { return false; }
-                    void await_suspend(std::coroutine_handle<> ) const noexcept
-                        { me.serverComplete(); }
+                    auto await_suspend(std::coroutine_handle<> ) const noexcept
+                        { return me.serverComplete(); }
                     constexpr void await_resume() const noexcept {}
                 };
                 return awaiter{*this};
@@ -931,8 +933,8 @@ inline namespace CO_DISPATCH_NS {
                 struct awaiter {
                     Promise & me;
                     constexpr bool await_ready() const noexcept { return false; }
-                    void await_suspend(std::coroutine_handle<> ) const noexcept
-                        { me.serverComplete(); }
+                    auto await_suspend(std::coroutine_handle<> ) const noexcept
+                        { return me.serverComplete(); }
                     constexpr void await_resume() const noexcept {}
                 };
                 return awaiter{*this};
@@ -945,8 +947,8 @@ inline namespace CO_DISPATCH_NS {
                 struct awaiter {
                     Promise & me;
                     constexpr bool await_ready() const noexcept { return false; }
-                    void await_suspend(std::coroutine_handle<> ) const noexcept
-                        { me.serverComplete(); }
+                    auto await_suspend(std::coroutine_handle<> ) const noexcept
+                        { return me.serverComplete(); }
                     constexpr void await_resume() const noexcept {}
                 };
                 return awaiter{*this};
@@ -1074,11 +1076,12 @@ inline namespace CO_DISPATCH_NS {
             dispatch_time_t when;
             auto await_ready() noexcept
                 { return false; }
-            void await_suspend(std::coroutine_handle<> h) noexcept {
+            auto await_suspend(std::coroutine_handle<> h) noexcept {
                 if (when == DISPATCH_TIME_NOW)
                     dispatch_async_f(queue, h.address(), Awaitable::resume);
                 else
                     dispatch_after_f(when, queue, h.address(), Awaitable::resume);
+                return std::noop_coroutine();
             }
             void await_resume() noexcept
                 {}
