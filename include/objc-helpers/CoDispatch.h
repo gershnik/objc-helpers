@@ -68,7 +68,7 @@ inline namespace CO_DISPATCH_NS {
         template<class T> struct Noref { T * __nullable ptr; };
         
         template<class T>
-        class RefcntPtr {
+        class [[clang::trivial_abi]] RefcntPtr {
             template<class Y> friend class RefcntPtr;
         public:
             RefcntPtr(Ref<T> src) noexcept :
@@ -89,7 +89,7 @@ inline namespace CO_DISPATCH_NS {
             {}
             RefcntPtr & operator=(const RefcntPtr &) = delete;
             RefcntPtr & operator=(RefcntPtr &&) = delete;
-            ~RefcntPtr() noexcept {
+            [[clang::always_inline]] ~RefcntPtr() noexcept {
                 if (m_ptr)
                     m_ptr->subRef();
             }
@@ -583,12 +583,12 @@ inline namespace CO_DISPATCH_NS {
             //So we add reference counting here to the State even though it isn't otherwise needed and makes
             //it less safe.
             
-            void addRef() const noexcept {
+            [[clang::always_inline]] void addRef() const noexcept {
                 [[maybe_unused]] auto oldcount = m_refCount.fetch_add(1, std::memory_order_relaxed);
                 assert(oldcount > 0);
                 assert(oldcount < std::numeric_limits<decltype(oldcount)>::max());
             }
-            void subRef() const noexcept {
+            [[clang::always_inline]] void subRef() const noexcept {
                 auto oldcount = m_refCount.fetch_sub(1, std::memory_order_release);
                 assert(oldcount > 0);
                 if (oldcount == 1)
