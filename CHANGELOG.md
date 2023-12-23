@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## [2.2] - 2023-12-22
+
 ### Changed
 - Performance optimizations for CoDispatch
 
@@ -41,3 +43,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 [1.1]: https://github.com/gershnik/objc-helpers/releases/tag/v1.1
 [2.0]: https://github.com/gershnik/objc-helpers/releases/v2.0
 [2.1]: https://github.com/gershnik/objc-helpers/releases/v2.1
+[2.2]: https://github.com/gershnik/objc-helpers/releases/v2.2
