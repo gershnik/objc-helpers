@@ -3,5 +3,7 @@
 #include "doctest.h"
 
 int main(int argc, const char * argv[]) {
-    return doctest::Context(argc, argv).run();
+    @autoreleasepool {
+        return doctest::Context(argc, argv).run();
+    }
 }

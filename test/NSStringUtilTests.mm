@@ -7,6 +7,8 @@
 #include <ranges>
 #include <algorithm>
 
+TEST_SUITE_BEGIN( "NSStringUtilTests" );
+
 TEST_CASE("comparison") {
     
     CHECK(NSStringEqual()(@"abc", @"abc"));
@@ -112,3 +114,5 @@ TEST_CASE("char access") {
     
     CHECK(CFStringCompare(NSStringCharAccess(@"abcd").getCFString(), CFSTR("abcd"), 0) == 0);
 }
+
+TEST_SUITE_END();

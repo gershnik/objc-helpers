@@ -2,6 +2,8 @@
 
 #include "doctest.h"
 
+TEST_SUITE_BEGIN( "NSNumberUtilTests" );
+
 TEST_CASE("comparison") {
     
     CHECK(NSNumberEqual()(@(1), @(1)));
@@ -17,3 +19,5 @@ TEST_CASE("comparison") {
     CHECK(!NSNumberLess()(@(0), nullptr));
     CHECK(!NSNumberLess()(nullptr, nullptr));
 }
+
+TEST_SUITE_END();

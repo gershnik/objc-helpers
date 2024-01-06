@@ -22,13 +22,14 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		441779162B20136E0036AF9F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 441779152B20136E0036AF9F /* main.cpp */; };
+		441779162B20136E0036AF9F /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 441779152B20136E0036AF9F /* main.mm */; };
 		4417791E2B201E280036AF9F /* NSStringUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4417791D2B201E280036AF9F /* NSStringUtilTests.mm */; };
 		441779202B202DA30036AF9F /* CoDispatchTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4417791F2B202DA30036AF9F /* CoDispatchTests.mm */; };
 		441779352B2235B70036AF9F /* CoDispatchTestsCpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 441779342B2235B70036AF9F /* CoDispatchTestsCpp.cpp */; };
 		441779372B24C4930036AF9F /* NSNumberUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 441779362B24C4930036AF9F /* NSNumberUtilTests.mm */; };
 		441779392B24C6B00036AF9F /* NSObjectUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 441779382B24C6B00036AF9F /* NSObjectUtilTests.mm */; };
 		4417793B2B26FEA70036AF9F /* CoDispatchTestsNoexcept.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4417793A2B26FEA60036AF9F /* CoDispatchTestsNoexcept.cpp */; settings = {COMPILER_FLAGS = "-fno-exceptions"; }; };
+		44B947E72B477A2700B68C7E /* BoxUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 44B947E62B477A2700B68C7E /* BoxUtilTests.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,7 +56,7 @@
 
 /* Begin PBXFileReference section */
 		441779122B20136E0036AF9F /* test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test; sourceTree = BUILT_PRODUCTS_DIR; };
-		441779152B20136E0036AF9F /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		441779152B20136E0036AF9F /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		4417791C2B2013E00036AF9F /* doctest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = doctest.h; sourceTree = "<group>"; };
 		4417791D2B201E280036AF9F /* NSStringUtilTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NSStringUtilTests.mm; sourceTree = "<group>"; };
 		4417791F2B202DA30036AF9F /* CoDispatchTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CoDispatchTests.mm; sourceTree = "<group>"; };
@@ -68,6 +69,8 @@
 		441779362B24C4930036AF9F /* NSNumberUtilTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NSNumberUtilTests.mm; sourceTree = "<group>"; };
 		441779382B24C6B00036AF9F /* NSObjectUtilTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NSObjectUtilTests.mm; sourceTree = "<group>"; };
 		4417793A2B26FEA60036AF9F /* CoDispatchTestsNoexcept.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = CoDispatchTestsNoexcept.cpp; sourceTree = "<group>"; };
+		44B947E52B4778EB00B68C7E /* BoxUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BoxUtil.h; sourceTree = "<group>"; };
+		44B947E62B477A2700B68C7E /* BoxUtilTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BoxUtilTests.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,11 +89,12 @@
 			children = (
 				441779212B202F3E0036AF9F /* Library */,
 				4417791C2B2013E00036AF9F /* doctest.h */,
-				441779152B20136E0036AF9F /* main.cpp */,
+				441779152B20136E0036AF9F /* main.mm */,
 				4417791F2B202DA30036AF9F /* CoDispatchTests.mm */,
 				441779342B2235B70036AF9F /* CoDispatchTestsCpp.cpp */,
 				4417793A2B26FEA60036AF9F /* CoDispatchTestsNoexcept.cpp */,
 				4417791D2B201E280036AF9F /* NSStringUtilTests.mm */,
+				44B947E62B477A2700B68C7E /* BoxUtilTests.mm */,
 				441779362B24C4930036AF9F /* NSNumberUtilTests.mm */,
 				441779382B24C6B00036AF9F /* NSObjectUtilTests.mm */,
 				441779132B20136E0036AF9F /* Products */,
@@ -109,6 +113,7 @@
 			isa = PBXGroup;
 			children = (
 				441779252B202F530036AF9F /* BlockUtil.h */,
+				44B947E52B4778EB00B68C7E /* BoxUtil.h */,
 				441779222B202F530036AF9F /* CoDispatch.h */,
 				441779242B202F530036AF9F /* NSNumberUtil.h */,
 				441779232B202F530036AF9F /* NSObjectUtil.h */,
@@ -201,8 +206,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				441779202B202DA30036AF9F /* CoDispatchTests.mm in Sources */,
-				441779162B20136E0036AF9F /* main.cpp in Sources */,
+				441779162B20136E0036AF9F /* main.mm in Sources */,
 				441779372B24C4930036AF9F /* NSNumberUtilTests.mm in Sources */,
+				44B947E72B477A2700B68C7E /* BoxUtilTests.mm in Sources */,
 				4417791E2B201E280036AF9F /* NSStringUtilTests.mm in Sources */,
 				441779352B2235B70036AF9F /* CoDispatchTestsCpp.cpp in Sources */,
 				441779392B24C6B00036AF9F /* NSObjectUtilTests.mm in Sources */,

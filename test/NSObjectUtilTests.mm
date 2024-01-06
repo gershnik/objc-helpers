@@ -35,6 +35,8 @@
 
 @end
 
+TEST_SUITE_BEGIN( "NSObjectUtilTests" );
+
 TEST_CASE("comparison") {
     
     CHECK(NSObjectEqual()(@(1), @(1)));
@@ -70,3 +72,5 @@ TEST_CASE("printing") {
         CHECK(str.str() == "nullptr");
     }
 }
+
+TEST_SUITE_END();

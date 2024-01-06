@@ -1,6 +1,5 @@
 #include <objc-helpers/CoDispatch.h>
 
-//#define DOCTEST_CONFIG_NO_EXCEPTIONS
 #include "doctest.h"
 
 #include <CoreFoundation/CoreFoundation.h>
