@@ -1,12 +1,13 @@
 # ObjC-Helpers #
 
-A collection of utilities to make coding on Apple platforms in C++ or ObjectiveC++ more pleasant
+An ever-growing collection of utilities to make coding on Apple platforms in C++ or ObjectiveC++ more pleasant
 
 <!-- TOC depthfrom:2 -->
 
 - [What's included?](#whats-included)
     - [BlockUtil.h](#blockutilh)
     - [CoDispatch.h](#codispatchh)
+    - [BoxUtil.h](#boxutilh)
     - [NSObjectUtil.h](#nsobjectutilh)
     - [NSStringUtil.h](#nsstringutilh)
     - [NSNumberUtil.h](#nsnumberutilh)
@@ -133,6 +134,64 @@ int main() {
 
 This facility can also be used both from plain C++ (.cpp) and ObjectiveC++ (.mm) files.
 
+### `BoxUtil.h` ###
+
+Sometimes you want to store a C++ object where an ObjectiveC object is expected. Perhaps there is
+some `NSObject * tag` which you really want to put an `std::vector` in or something similar. You can,
+of course, do that by creating a wrapper ObjectiveC class that stores `std::vector` but it is a huge annoyance. Yet another ObjectiveC class to write (so a new header and a .mm file) lots of boilerplate code for `init` and value access and, after all that, it is going to to be `std::vector` specific. If you later need to wrap another C++ class you need yet another wrapper. 
+
+For plain C structs ObjectiveC has a solution: `NSValue` that can store any C struct and let you retrieve it back later. Unfortunately in C++ this only works for "trivially copyable" types (which more or less correspond to "plain C structs"). Trying to stick anything else in `NSValue` will appear to work but likely do very bad things - it simply copies object bytes into it and out! Whether bytes copied out will work as the original object is undefined.
+
+To solve this issue `BoxUtil.h` provides generic facilities for wrapping and unwrapping of any C++ object in an `NSObject`-derived classes without writing any code. Such wrapping and unwrapping of native objects in higher-level language ones are usually called "boxing" and "unboxing", hence the
+name of the header and it's APIs. 
+
+The only requirement for the C++ class to be wrappable is having a public destructor and at least one public constructor. The constructor doesn't need to be default - boxing works with objects that need to be "emplaced".
+
+You use it like this:
+
+```objc++
+std::vector<int> someVector{1,2,3};
+//this copies the vector into the wrapper
+NSObject * obj1 = box(someVector);
+//and this moves it
+NSObject * obj2 = box(std::move(someVector));
+//you can also do this
+NSObject * obj3 = box(std::vector<int>{1,2,3});
+//and you can emplace the object directly rather than copy or move it
+NSObject * obj4 = box<std::vector<int>>(5, 3); //emplaces {3,3,3,3,3}
+
+//You can get a reference to wrapped object
+//This will raise an ObjectiveC exception if the type doesn't macth
+
+auto & vec = boxedValue<std::vector<int>>(obj1);
+assert(vec.size() == 3);
+assert(vec[1] == 2);
+
+The reference you get back is mutable by default. If you want immutability do this
+NSObject * immuatbleObj = box<const std::vector<int>>(...any of the stuff above...);
+
+//if your C++ object has a copy constructor the wrapper will implement
+//NSCopying
+auto * obj5 = (NSObject *)[obj1 copy];
+
+//this uses operator== if available, which it is
+assert([obj1 isEqual:obj3]);
+
+//and this uses std::hash if available
+//it will raise an exception if you have operator== but not std::hash!
+//as incositent equality and hashing is one of the most common ObjectiveC errors
+auto hash = obj1.hash
+
+
+//you can obtain a sensible description
+//it will try to use:
+//std::to_string 
+//iostream << 
+//fall back on "boxed object of type <name of the class>"
+
+auto desc = obj1.description;
+
+```
 
 ### `NSObjectUtil.h` ###
 
