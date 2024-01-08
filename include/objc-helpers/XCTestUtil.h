@@ -6,8 +6,8 @@
  https://github.com/gershnik/objc-helpers/blob/main/LICENSE
 */
 
-#ifndef HEADER_BOX_UTIL_INCLUDED
-#define HEADER_BOX_UTIL_INCLUDED
+#ifndef HEADER_XCTEST_UTIL_INCLUDED
+#define HEADER_XCTEST_UTIL_INCLUDED
 
 #import <XCTest/XCTest.h>
 

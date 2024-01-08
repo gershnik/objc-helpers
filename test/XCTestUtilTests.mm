@@ -1,4 +1,4 @@
-#include <objc-helpers/TestUtil.h>
+#include <objc-helpers/XCTestUtil.h>
 
 #include "doctest.h"
 

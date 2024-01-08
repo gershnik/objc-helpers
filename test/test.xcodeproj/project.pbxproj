@@ -30,7 +30,7 @@
 		441779392B24C6B00036AF9F /* NSObjectUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 441779382B24C6B00036AF9F /* NSObjectUtilTests.mm */; };
 		4417793B2B26FEA70036AF9F /* CoDispatchTestsNoexcept.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4417793A2B26FEA60036AF9F /* CoDispatchTestsNoexcept.cpp */; settings = {COMPILER_FLAGS = "-fno-exceptions"; }; };
 		44B947E72B477A2700B68C7E /* BoxUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 44B947E62B477A2700B68C7E /* BoxUtilTests.mm */; };
-		44B948032B4A4EE500B68C7E /* TestUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 44B947E92B49A75400B68C7E /* TestUtilTests.mm */; };
+		44B948032B4A4EE500B68C7E /* XCTestUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 44B947E92B49A75400B68C7E /* XCTestUtilTests.mm */; };
 		44B948042B4A4EF600B68C7E /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44B947FF2B49ACF900B68C7E /* XCTest.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 /* End PBXBuildFile section */
 
@@ -73,8 +73,8 @@
 		4417793A2B26FEA60036AF9F /* CoDispatchTestsNoexcept.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = CoDispatchTestsNoexcept.cpp; sourceTree = "<group>"; };
 		44B947E52B4778EB00B68C7E /* BoxUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BoxUtil.h; sourceTree = "<group>"; };
 		44B947E62B477A2700B68C7E /* BoxUtilTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BoxUtilTests.mm; sourceTree = "<group>"; };
-		44B947E82B49A6ED00B68C7E /* TestUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestUtil.h; sourceTree = "<group>"; };
-		44B947E92B49A75400B68C7E /* TestUtilTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestUtilTests.mm; sourceTree = "<group>"; };
+		44B947E82B49A6ED00B68C7E /* XCTestUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XCTestUtil.h; sourceTree = "<group>"; };
+		44B947E92B49A75400B68C7E /* XCTestUtilTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = XCTestUtilTests.mm; sourceTree = "<group>"; };
 		44B947FF2B49ACF900B68C7E /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
@@ -103,7 +103,7 @@
 				4417791D2B201E280036AF9F /* NSStringUtilTests.mm */,
 				441779362B24C4930036AF9F /* NSNumberUtilTests.mm */,
 				441779382B24C6B00036AF9F /* NSObjectUtilTests.mm */,
-				44B947E92B49A75400B68C7E /* TestUtilTests.mm */,
+				44B947E92B49A75400B68C7E /* XCTestUtilTests.mm */,
 				441779132B20136E0036AF9F /* Products */,
 				44B947EB2B49A7BD00B68C7E /* Frameworks */,
 			);
@@ -126,7 +126,7 @@
 				441779242B202F530036AF9F /* NSNumberUtil.h */,
 				441779232B202F530036AF9F /* NSObjectUtil.h */,
 				441779262B202F530036AF9F /* NSStringUtil.h */,
-				44B947E82B49A6ED00B68C7E /* TestUtil.h */,
+				44B947E82B49A6ED00B68C7E /* XCTestUtil.h */,
 			);
 			name = Library;
 			path = "../include/objc-helpers";
@@ -227,7 +227,7 @@
 				441779372B24C4930036AF9F /* NSNumberUtilTests.mm in Sources */,
 				44B947E72B477A2700B68C7E /* BoxUtilTests.mm in Sources */,
 				4417791E2B201E280036AF9F /* NSStringUtilTests.mm in Sources */,
-				44B948032B4A4EE500B68C7E /* TestUtilTests.mm in Sources */,
+				44B948032B4A4EE500B68C7E /* XCTestUtilTests.mm in Sources */,
 				441779352B2235B70036AF9F /* CoDispatchTestsCpp.cpp in Sources */,
 				441779392B24C6B00036AF9F /* NSObjectUtilTests.mm in Sources */,
 				4417793B2B26FEA70036AF9F /* CoDispatchTestsNoexcept.cpp in Sources */,
