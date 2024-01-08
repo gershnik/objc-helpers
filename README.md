@@ -11,6 +11,7 @@ An ever-growing collection of utilities to make coding on Apple platforms in C++
     - [NSObjectUtil.h](#nsobjectutilh)
     - [NSStringUtil.h](#nsstringutilh)
     - [NSNumberUtil.h](#nsnumberutilh)
+    - [XCTestUtil.h](#xctestutilh)
     - [General notes](#general-notes)
 
 <!-- /TOC -->
@@ -214,6 +215,28 @@ auto desc = obj1.description;
 `NSNumberLess` comparator. This allows `NSNumber` objects to be used as keys in `std::map` or `std::set` as well as used in STL sorting and searching algorithms.  
 
 `NSNumberEqual` comparator. This is more efficient than `NSObjectEqual` and is implemented in terms of `isEqualToNumber`. 
+
+### XCTestUtil.h ###
+
+When using XCTest framework you might be tempted to use `XCTAssertEqual` and similar on C++ objects. While this works and works safely you will quickly discover that when the tests fail you get a less than useful failure message that shows _raw bytes_ of the C++ object instead of any kind of logical description. This happens because in order to obtain the textual description of the value `XCTAssertEqual` and friends stuff it into an `NSValue` and then query its description. And, as mentioned in [BoxUtil.h](#boxutilh) section, `NSValue` simply copies raw bytes of a C++ object. 
+
+While this is still safe, because nothing except the description is ever done with those bytes the end result is hardly usable. To fix this `XCTestUtil.h` header provides the following replacement macros:
+
+- `XCTAssertCppEqual`
+- `XCTAssertCppNotEqual`
+- `XCTAssertCppGreaterThan`
+- `XCTAssertCppGreaterThanOrEqual`
+- `XCTAssertCppLessThan`
+- `XCTAssertCppLessThanOrEqual`
+
+That, in the case of failure, try to obtain description using the following methods:
+
+- If there is an ADL call `testDescription(obj)` that produces `NSString *`, use that.
+- Otherwise, if there is an ADL call `to_string(obj)` in `using std::to_string` scope, use that
+- Otherwise, if it is possible to do `ostream << obj`, use that
+- Finally produce `"<full name of the type> object"` string.
+
+Thus if an object is printable using the typical means those will be automatically used. You can also make your own objects printable using either of the means above. The `testDescription` approach specifically exists to allow you to print something different for tests than in normal code.
 
 ### General notes ###
 
