@@ -7,7 +7,7 @@ TEST_SUITE_BEGIN( "BoxUtilTests" );
 
 TEST_CASE( "integer" ) {
     auto obj = box(42);
-    static_assert(std::is_same_v<decltype(obj), NSObject<BoxedValue, NSCopying> *>);
+    static_assert(std::is_same_v<decltype(obj), NSObject<BoxedValue, BoxedComparable, NSCopying> *>);
     CHECK(boxedValue<int>(obj) == 42);
     CHECK([obj.description isEqualToString:@"42"]);
     CHECK(obj.hash == std::hash<int>()(42));
@@ -29,6 +29,10 @@ TEST_CASE( "integer" ) {
     CHECK([objc isEqual:objc]);
     CHECK(![objc isEqual:@(42)]);
     
+    CHECK([box(5) compare:box(6)] == NSOrderedAscending);
+    CHECK([box(6) compare:box(5)] == NSOrderedDescending);
+    CHECK([box(6) compare:box(6)] == NSOrderedSame);
+    
     @try {
         [[maybe_unused]] auto obj1 = (NSObject *)[[obj.class alloc] init];
         FAIL("able to call init");
@@ -48,7 +52,7 @@ TEST_CASE( "string" ) {
     std::string str("abc");
     
     auto obj = box(std::string("abc"));
-    static_assert(std::is_same_v<decltype(obj), NSObject<BoxedValue, NSCopying> *>);
+    static_assert(std::is_same_v<decltype(obj), NSObject<BoxedValue, BoxedComparable, NSCopying> *>);
     CHECK(boxedValue<std::string>(obj) == str);
     CHECK([obj.description isEqualToString:@"abc"]);
     CHECK(obj.hash == std::hash<std::string>()(str));
@@ -70,7 +74,7 @@ TEST_CASE( "string" ) {
 TEST_CASE( "unique_ptr" ) {
     
     auto obj = box(std::make_unique<int>(5));
-    static_assert(std::is_same_v<decltype(obj), NSObject<BoxedValue> *>);
+    static_assert(std::is_same_v<decltype(obj), NSObject<BoxedValue, BoxedComparable> *>);
     CHECK(*boxedValue<std::unique_ptr<int>>(obj) == 5);
     
     @try {
@@ -118,6 +122,8 @@ TEST_CASE( "equal-no-hash" ) {
     
     auto obj1 = box(foo{4, 'b'});
     auto obj2 = box(foo{4, 'b'});
+    
+    static_assert(std::is_same_v<decltype(obj1), NSObject<BoxedValue, NSCopying> *>);
     
     CHECK(boxedValue<foo>(obj1).i == 4);
     CHECK(boxedValue<foo>(obj2).c == 'b');

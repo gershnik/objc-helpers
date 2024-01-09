@@ -25,9 +25,16 @@
 
 
 /**
- Protocol that marks that NSObject conforming to it is a boxed C++ object
+ Marks that NSObject conforming to it is a boxed C++ object
  */
 @protocol BoxedValue<NSObject>
+@end
+
+/**
+ Marks that NSObject conforming to it can be comapred to others of the same type
+ */
+@protocol BoxedComparable<NSObject>
+- (NSComparisonResult) compare:(id<BoxedComparable> __nonnull)other;
 @end
 
 
@@ -59,8 +66,9 @@ namespace BoxMakerDetail {
             SEL deallocSel = sel_registerName("dealloc");
             SEL descriptionSel = @selector(description);
             SEL copyWithZoneSel = @selector(copyWithZone:);
-            SEL isEqual = @selector(isEqual:);
-            SEL hash = @selector(hash);
+            SEL isEqualSel = @selector(isEqual:);
+            SEL hashSel = @selector(hash);
+            SEL compareSel = @selector(compare:);
             
             Class NSObjectClass = NSObject.class;
             id (*NSOBject_initIMP)(id, SEL);
@@ -103,10 +111,18 @@ template<class T>
 class BoxMaker {
 private:
     static auto detectBoxedType() {
-        if constexpr (std::is_copy_constructible_v<T>) {
-            return (NSObject<BoxedValue, NSCopying> *)nullptr;
+        if constexpr (std::three_way_comparable<T, std::strong_ordering>) {
+            if constexpr (std::is_copy_constructible_v<T>) {
+                return (NSObject<BoxedValue, BoxedComparable, NSCopying> *)nullptr;
+            } else {
+                return (NSObject<BoxedValue, BoxedComparable> *)nullptr;
+            }
         } else {
-            return (NSObject<BoxedValue> *)nullptr;
+            if constexpr (std::is_copy_constructible_v<T>) {
+                return (NSObject<BoxedValue, NSCopying> *)nullptr;
+            } else {
+                return (NSObject<BoxedValue> *)nullptr;
+            }
         }
     }
     
@@ -150,11 +166,16 @@ private:
                     @throw [NSException exceptionWithName:NSGenericException reason:@"class_addMethod(copyWithZone) failed" userInfo:nullptr];
             }
             
-            if (!class_addMethod(cls, objcData.isEqual, IMP(isEqual), "@@:@"))
+            if (!class_addMethod(cls, objcData.isEqualSel, IMP(isEqual), "@@:@"))
                 @throw [NSException exceptionWithName:NSGenericException reason:@"class_addMethod(isEqualTo) failed" userInfo:nullptr];
             
-            if (!class_addMethod(cls, objcData.hash, IMP(hash), (@encode(NSUInteger) + "@:"s).c_str()))
+            if (!class_addMethod(cls, objcData.hashSel, IMP(hash), (@encode(NSUInteger) + "@:"s).c_str()))
                 @throw [NSException exceptionWithName:NSGenericException reason:@"class_addMethod(hash) failed" userInfo:nullptr];
+            
+            if constexpr (std::three_way_comparable<T, std::strong_ordering>) {
+                if (!class_addMethod(cls, objcData.compareSel, IMP(compare), (@encode(NSComparisonResult) + "@:@"s).c_str()))
+                    @throw [NSException exceptionWithName:NSGenericException reason:@"class_addMethod(compare) failed" userInfo:nullptr];
+            }
             
             objc_registerClassPair(cls);
             
@@ -242,6 +263,20 @@ private:
             return std::hash<void *>()((__bridge void *)self);
         }
     }
+    
+    static auto compare(id __nonnull self, SEL __nonnull, id __nullable other) -> NSComparisonResult {
+        if (other == self)
+            return NSOrderedSame;
+        if (!other)
+            @throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"comparison operand is nil" userInfo:nullptr];
+        auto & classData = getClassData();
+        if (object_getClass(other) != classData.cls)
+            @throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"comparison operand is of invalid type" userInfo:nullptr];
+        auto * val = (T *)classData.addrOfValue(self);
+        auto * otherVal = (T *)classData.addrOfValue(other);
+        const auto res = *val <=> *otherVal;
+        return NSComparisonResult(-(res < 0) + (res > 0));
+    }
 public:
     template<class... Args>
     requires(std::is_constructible_v<T, Args...>)
@@ -274,11 +309,11 @@ public:
 /**
  Box a value emplacing it.
  
- Call this like this:
- ```
+ Call it like this:
+ @code
  //this constructs a boxed vector of 7 chars 'a'
  auto obj = box<std::vector<char>>(7, 'a');
- ```
+ @endcode
  */
 template<class T, class... Args>
 requires(std::is_constructible_v<T, Args...>)
@@ -289,14 +324,19 @@ inline auto box(Args &&... args) -> BoxMaker<T>::BoxedType
 /**
  Box a value via copy or move
  
- Call this like this:
- ```
+ @return NSObject\<BoxedValue, other protocols\> \* object where other protocols are as follows
+ 
+ - BoxedComparable if the boxed value can be `<=>` compared producing strong ordering
+ - NSCopying if the boxed value has copy constructor
+ 
+ Call it like this:
+ @code
  std::string str("abc")
  //this constructs a boxed copy of the string
  auto obj = box(str);
  //this constructs a boxed moved copy of the string
  auto obj1 = box(std::move(str));
- ```
+ @endcode
  */
 template<class T>
 requires(std::is_constructible_v<std::remove_cvref_t<T>, T &&>)
@@ -304,7 +344,7 @@ inline auto box(T && src) -> BoxMaker<T>::BoxedType
     { return BoxMaker<std::remove_cvref_t<T>>::box(std::forward<T>(src)); }
 
 /**
- Retrieve a reference to boxed value
+ Retrieve a reference to the boxed value
  */
 template<class T>
 inline auto boxedValue(typename BoxMaker<T>::BoxedType obj) -> T &

@@ -144,6 +144,12 @@ void CoroutineRunner() {
     while (shouldKeepRunning && [theRL runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]);
 }
 
+//MARK: - Boxing arbitrary objects
+
+void BoxingDemo() {
+    
+}
+
 //MARK: - Printing ObjectiveC objects to iostreams
 
 void IOStreamDemo() {
