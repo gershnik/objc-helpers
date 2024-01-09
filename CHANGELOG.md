@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+### Added
+- BoxUtil header for generic boxing and unboxing of any C++ object to/from an ObjectiveC one
+- 
+
 ## [2.2] - 2023-12-22
 
 ### Changed
