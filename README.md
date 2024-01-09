@@ -171,8 +171,8 @@ assert(vec[1] == 2);
 The reference you get back is mutable by default. If you want immutability do this
 NSObject * immuatbleObj = box<const std::vector<int>>(...any of the stuff above...);
 
-//if your C++ object has a copy constructor the wrapper will implement
-//NSCopying
+//if your C++ object has a copy constructor the wrapper 
+//will implement NSCopying
 auto * obj5 = (NSObject *)[obj1 copy];
 
 //this uses operator== if available, which it is
@@ -183,7 +183,6 @@ assert([obj1 isEqual:obj3]);
 //as incositent equality and hashing is one of the most common ObjectiveC errors
 auto hash = obj1.hash
 
-
 //you can obtain a sensible description
 //it will try to use:
 //std::to_string 
@@ -191,6 +190,10 @@ auto hash = obj1.hash
 //fall back on "boxed object of type <name of the class>"
 
 auto desc = obj1.description;
+
+//if your object supports <=> operator that returns std::strong_ordering
+//you can use compare: method
+assert([box(5) compare:box(6)] == NSOrderingAscending);
 
 ```
 
