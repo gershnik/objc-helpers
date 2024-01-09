@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## [2.3] - 2024-01-09
+
 ### Added
 - `BoxUtil.h` header for generic boxing and unboxing of any C++ object to/from an ObjectiveC one
 - `XCTestUtil.h` header for XCTest macros to compare C++ objects while producing useful descriptions in case of failure.
@@ -48,3 +50,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 [2.0]: https://github.com/gershnik/objc-helpers/releases/v2.0
 [2.1]: https://github.com/gershnik/objc-helpers/releases/v2.1
 [2.2]: https://github.com/gershnik/objc-helpers/releases/v2.2
+[2.3]: https://github.com/gershnik/objc-helpers/releases/v2.3
