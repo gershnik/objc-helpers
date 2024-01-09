@@ -111,7 +111,7 @@ template<class T>
 class BoxMaker {
 private:
     static auto detectBoxedType() {
-        if constexpr (std::three_way_comparable<T, std::strong_ordering>) {
+        if constexpr (std::totally_ordered<T>) {
             if constexpr (std::is_copy_constructible_v<T>) {
                 return (NSObject<BoxedValue, BoxedComparable, NSCopying> *)nullptr;
             } else {
@@ -172,7 +172,7 @@ private:
             if (!class_addMethod(cls, objcData.hashSel, IMP(hash), (@encode(NSUInteger) + "@:"s).c_str()))
                 @throw [NSException exceptionWithName:NSGenericException reason:@"class_addMethod(hash) failed" userInfo:nullptr];
             
-            if constexpr (std::three_way_comparable<T, std::strong_ordering>) {
+            if constexpr (std::totally_ordered<T>) {
                 if (!class_addMethod(cls, objcData.compareSel, IMP(compare), (@encode(NSComparisonResult) + "@:@"s).c_str()))
                     @throw [NSException exceptionWithName:NSGenericException reason:@"class_addMethod(compare) failed" userInfo:nullptr];
             }
@@ -274,7 +274,7 @@ private:
             @throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"comparison operand is of invalid type" userInfo:nullptr];
         auto * val = (T *)classData.addrOfValue(self);
         auto * otherVal = (T *)classData.addrOfValue(other);
-        const auto res = *val <=> *otherVal;
+        const auto res = std::compare_strong_order_fallback(*val, *otherVal);
         return NSComparisonResult(-(res < 0) + (res > 0));
     }
 public:

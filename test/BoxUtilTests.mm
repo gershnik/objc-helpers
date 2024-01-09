@@ -143,6 +143,37 @@ TEST_CASE( "no-desc" ) {
     CHECK([obj.description isEqualToString:@"Boxed object of type \"qwerty\""]);
 }
 
+struct no_spaceship {
+    int i;
+    
+    bool operator==(const no_spaceship &) const = default;
+    bool operator!=(const no_spaceship &) const = default;
+    bool operator<(const no_spaceship & rhs) const { return i < rhs.i; }
+    bool operator<=(const no_spaceship & rhs) const { return i <= rhs.i; }
+    bool operator>(const no_spaceship & rhs) const { return i > rhs.i; }
+    bool operator>=(const no_spaceship & rhs) const { return i >= rhs.i; }
+};
+
+TEST_CASE( "no-spaceship" ) {
+    auto obj1 = box(no_spaceship{3});
+    auto obj2 = box(no_spaceship{4});
+    CHECK([obj1 compare:obj2] == NSOrderedAscending);
+}
+
+struct spaceship_only {
+    int i;
+    
+    std::strong_ordering operator<=>(const spaceship_only &) const = default;
+};
+
+TEST_CASE( "no-spaceship" ) {
+    auto obj1 = box(spaceship_only{3});
+    auto obj2 = box(spaceship_only{4});
+    CHECK([obj1 compare:obj2] == NSOrderedAscending);
+    
+    auto obj3 = box(spaceship_only{3});
+    CHECK([obj3 isEqual:obj1]);
+}
 
 
 TEST_SUITE_END();
