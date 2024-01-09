@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 
 #include "../include/objc-helpers/BlockUtil.h"
+#include "../include/objc-helpers/BoxUtil.h"
 #include "../include/objc-helpers/CoDispatch.h"
 #include "../include/objc-helpers/NSStringUtil.h"
 #include "../include/objc-helpers/NSObjectUtil.h"
@@ -146,8 +147,53 @@ void CoroutineRunner() {
 
 //MARK: - Boxing arbitrary objects
 
+struct non_copyable {
+    non_copyable() = default;
+    non_copyable(const non_copyable &) = delete;
+    non_copyable(non_copyable &&) = default;
+    
+    friend std::ostream & operator<<(std::ostream & str, const non_copyable &) {
+        return str << "something!";
+    }
+};
+
 void BoxingDemo() {
     
+    auto str1 = box(std::string("hello"));
+    static_assert(std::is_same_v<decltype(str1), NSObject<BoxedValue, BoxedComparable, NSCopying> *>);
+    
+    assert([str1.description isEqualToString:@"hello"]);
+    auto & val1 = boxedValue<std::string>(str1);
+    assert(val1 == "hello");
+    val1 = "aaa";
+    assert([str1.description isEqualToString:@"aaa"]);
+    
+    auto str2 = box<std::string>(3, 'a');
+    auto & val2 = boxedValue<std::string>(str2);
+    assert(val2 == "aaa");
+    assert([str1 isEqualTo:str2]);
+    assert([str1 compare:str2] == NSOrderedSame);
+    
+    decltype(str2) str3 = [str2 copy]; //NSCopying's copy: returns id, ugh!
+    assert([str2 isEqualTo:str3]);
+    
+    auto objcHash = str3.hash;
+    auto cppHash = std::hash<std::string>()(boxedValue<std::string>(str3));
+    assert(objcHash == cppHash);
+    
+    
+    auto nc = box(non_copyable{});
+    static_assert(std::is_same_v<decltype(nc), NSObject<BoxedValue> *>);
+    
+    assert([nc.description isEqualToString:@"something!"]);
+    
+    @try {
+        [nc copy];
+        assert(false);
+    }
+    @catch(NSException * ex) {
+        assert([ex.name isEqualTo:NSInvalidArgumentException]);
+    }
 }
 
 //MARK: - Printing ObjectiveC objects to iostreams
@@ -225,6 +271,8 @@ void NSStringCharAccessDemo() {
 int main(int argc, const char * argv[]) {
     
     [[BlockDemo new] callBlock];
+    
+    BoxingDemo();
     
     IOStreamDemo();
     
