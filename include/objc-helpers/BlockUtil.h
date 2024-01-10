@@ -11,6 +11,10 @@
 
 #include <functional>
 
+#ifndef __OBJC__
+#include <Block.h>
+#endif
+
 /*
  The purpose of this header is to allow nice and safe usage of C++ lambdas instead of
  ObjectiveC blocks.
@@ -64,6 +68,7 @@ namespace BlockUtil
         }
 
         template<class T>
+        [[deprecated("This call is no longer needed. Clang now allows converting lambdas to blocks directly in ObjectiveC++")]]
         auto makeBlock(T callable)
         {
             using DeducedFunctionType = decltype(deduceFunctionType(callable));
