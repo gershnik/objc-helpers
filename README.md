@@ -5,13 +5,13 @@ An ever-growing collection of utilities to make coding on Apple platforms in C++
 <!-- TOC depthfrom:2 -->
 
 - [What's included?](#whats-included)
-    - [BlockUtil.h](#blockutilh)
     - [CoDispatch.h](#codispatchh)
     - [BoxUtil.h](#boxutilh)
     - [NSObjectUtil.h](#nsobjectutilh)
     - [NSStringUtil.h](#nsstringutilh)
     - [NSNumberUtil.h](#nsnumberutilh)
     - [XCTestUtil.h](#xctestutilh)
+    - [BlockUtil.h](#blockutilh)
     - [General notes](#general-notes)
 
 <!-- /TOC -->
@@ -23,39 +23,6 @@ The library is a collection of mostly independent header files. There is nothing
 `sample` directory contains a sample that demonstrates the usage of main features.
 
 The headers are as follows:
-
-### `BlockUtil.h` ###
-
-Allows clean and safe usage of C++ lambdas instead of ObjectiveC blocks (which are confusingly also available
-in pure C++ on Apple platforms as an extension).
- 
-Why not use blocks? Blocks capture any variable mentioned in them automatically which
-causes no end of trouble with inadvertent capture and circular references. The most 
-common one is to accidentally capture `self` in a block. There is no protection in 
-ObjectiveC - you have to manually inspect code to ensure this doesn't happen. 
-Add in code maintenance, copy/paste and you are almost guaranteed to have bugs.
-Even if you have no bugs your block code is likely littered with strongSelf
-nonsense making it harder to understand.
- 
-C++ lambdas force you to explicitly specify what you capture, removing this whole problem.
-Unfortunately lambdas cannot be used as blocks. This header provides utility functions
-to fix this.
-The intended usage is
-
-```objc++ 
-[foo doBar:makeBlock([weakSelf = makeWeak(self)] () {
-    auto self = makeStrong(weakSelf);
-    if (!self)
-        return;
-    [self doSomething];
-}];
-```
- 
- Note that since in C++ code `self` isn't anything special we can use it as variable name
- for, well, actual self.
-
- Since blocks are supported even in plain C++ by Apple's clang compiler as an extension you can 
- use this facility both from plain C++ (.cpp) and ObjectiveC++ (.mm) files.
 
 ### `CoDispatch.h` ###
 
@@ -240,6 +207,38 @@ That, in the case of failure, try to obtain description using the following meth
 - Finally produce `"<full name of the type> object"` string.
 
 Thus if an object is printable using the typical means those will be automatically used. You can also make your own objects printable using either of the means above. The `testDescription` approach specifically exists to allow you to print something different for tests than in normal code.
+
+### `BlockUtil.h` ###
+
+> ℹ️️ Modern versions of Clang allow conversions of lambdas to blocks directly in **ObjectiveC++** (but not in plain C++). Thus `makeBlock` call described below is no longer necessary in ObjectiveC++ and is deprecated. It is still available in C++. 
+
+Allows clean and safe usage of C++ lambdas instead of ObjectiveC blocks which are also available
+in pure C++ on Apple platforms as an extension.
+ 
+Why not use blocks? Blocks capture any variable mentioned in them automatically which
+causes no end of trouble with inadvertent capture and circular references. The most 
+common one is to accidentally capture `self` in a block. There is no protection in 
+ObjectiveC - you have to manually inspect code to ensure this doesn't happen. 
+Add in code maintenance, copy/paste and you are almost guaranteed to have bugs.
+Even if you have no bugs your block code is likely littered with strongSelf
+nonsense making it harder to understand.
+ 
+C++ lambdas force you to explicitly specify what you capture, removing this whole problem.
+Unfortunately lambdas cannot be used as blocks. This header provides utility functions
+to fix this.
+The intended usage is something like this
+
+```objc++ 
+
+dispatch_async(makeBlock([weakSelf = makeWeak(self)] () {
+    auto self = makeStrong(weakSelf);
+    if (!self)
+        return;
+    [self doSomething];
+}));
+```
+ 
+> ℹ️️  Note that in C++ the block returned from `makeBlock` needs to be released at some point via `Block_release` - there is no ARC to handle it for you.
 
 ### General notes ###
 

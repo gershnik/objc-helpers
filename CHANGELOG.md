@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+### Changed
+- `BlockUtil.h`: `makeBlock` is deprecated in ObjectiveC++. Modern versions of Clang allow conversions from lambdas to block directly doing essentially what `makeBlock` was doing. Note that it is still available and necessary in C++.
+- `BoxUtil.h`: boxing now detects comparability and enables `compare:` not just via presence of operator `<=>` but also when only operators `<`, `==`, `<=` etc. are present.
+
 ## [2.3] - 2024-01-09
 
 ### Added
