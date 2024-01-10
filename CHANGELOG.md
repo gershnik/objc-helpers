@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 - `BlockUtil.h`: `makeBlock` is deprecated in ObjectiveC++. Modern versions of Clang allow conversions from lambdas to block directly doing essentially what `makeBlock` was doing. Note that it is still available and necessary in C++.
 - `BoxUtil.h`: boxing now detects comparability and enables `compare:` not just via presence of operator `<=>` but also when only operators `<`, `==`, `<=` etc. are present.
+- `BoxUtil.h`: generated ObjectiveC box classes now have names unique to each shared library/main executable, preventing collisions if multiple modules use boxing.
 
 ## [2.3] - 2024-01-09
 

@@ -16,12 +16,15 @@
 #include <objc/runtime.h>
 #import <Foundation/Foundation.h>
 
+#include <dlfcn.h>
+
 #include <cxxabi.h>
 
 #include <concepts>
 #include <string>
 #include <ostream>
 #include <sstream>
+#include <filesystem>
 
 
 /**
@@ -39,7 +42,7 @@
 
 
 
-namespace BoxMakerDetail {
+namespace BoxMakerDetail __attribute__((visibility("hidden"))) {
     using std::to_string;
     
     
@@ -71,14 +74,21 @@ namespace BoxMakerDetail {
             SEL compareSel = @selector(compare:);
             
             Class NSObjectClass = NSObject.class;
-            id (*NSOBject_initIMP)(id, SEL);
+            id (*NSObject_initIMP)(id, SEL);
+            std::string modulePrefix;
             
-            ObjcData():
-                NSOBject_initIMP((decltype(NSOBject_initIMP))class_getMethodImplementation(NSObjectClass, initSel))
-            {}
+            ObjcData(const void * sym):
+                NSObject_initIMP((decltype(NSObject_initIMP))class_getMethodImplementation(NSObjectClass, initSel)) {
+                    
+                Dl_info info;
+                if (!dladdr(sym, &info))
+                    @throw [NSException exceptionWithName:NSGenericException reason:@"dladdr failed" userInfo:nullptr];
+                std::filesystem::path mypath(info.dli_fname);
+                modulePrefix = mypath.stem().string() + '!';
+            }
         };
         
-        static const ObjcData data;
+        static const ObjcData data(&data);
         return static_cast<const ObjcData &>(data);
     };
     
@@ -108,7 +118,7 @@ namespace BoxMakerDetail {
 
 
 template<class T>
-class BoxMaker {
+class __attribute__((visibility("hidden"))) BoxMaker {
 private:
     static auto detectBoxedType() {
         if constexpr (std::totally_ordered<T>) {
@@ -131,7 +141,7 @@ public:
     
 private:
     
-    static auto getClassData() -> const BoxMakerDetail::ClassData & {
+    static __attribute__((visibility("hidden"))) auto getClassData() -> const BoxMakerDetail::ClassData & {
         
         static BoxMakerDetail::ClassData data = [] {
             using namespace std::literals;
@@ -143,7 +153,7 @@ private:
             auto & tid = typeid(T);
             classData.tName = demangle(tid.name());
             
-            std::string className = "BoxerOf_"s + tid.name();
+            std::string className = objcData.modulePrefix + "Boxed["s + tid.name() + ']';
             Class cls = objc_allocateClassPair(objcData.NSObjectClass, className.c_str(), 0);
             classData.cls = cls;
             
@@ -285,7 +295,7 @@ public:
         auto & classData = getClassData();
         
         id obj = class_createInstance(classData.cls, 0);
-        obj = objcData.NSOBject_initIMP(obj, objcData.initSel);
+        obj = objcData.NSObject_initIMP(obj, objcData.initSel);
         if (!obj)
             return nullptr;
         auto * dest = classData.addrOfValue(obj);
