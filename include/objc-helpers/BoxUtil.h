@@ -28,13 +28,13 @@
 
 
 /**
- Marks that NSObject conforming to it is a boxed C++ object
+ Signifies that NSObject conforming to it is a boxed C++ object
  */
 @protocol BoxedValue<NSObject>
 @end
 
 /**
- Marks that NSObject conforming to it can be comapred to others of the same type
+ Signifies that NSObject conforming to it can be comapred to others of the same type
  */
 @protocol BoxedComparable<NSObject>
 - (NSComparisonResult) compare:(id<BoxedComparable> __nonnull)other;
@@ -319,6 +319,13 @@ public:
 /**
  Box a value emplacing it.
  
+ @param args  arguments to forward to the constructor of T
+ @return `NSObject<BoxedValue, other protocols> *`
+ 
+ Additional protocols are as follows:
+ - `BoxedComparable` if the boxed value is `std::totally_ordered`
+ - `NSCopying` if the boxed value has copy constructor
+ 
  Call it like this:
  @code
  //this constructs a boxed vector of 7 chars 'a'
@@ -334,10 +341,11 @@ inline auto box(Args &&... args) -> BoxMaker<T>::BoxedType
 /**
  Box a value via copy or move
  
- @return NSObject\<BoxedValue, other protocols\> \* object where other protocols are as follows
+ @return `NSObject<BoxedValue, other protocols> *`
  
- - BoxedComparable if the boxed value can be `<=>` compared producing strong ordering
- - NSCopying if the boxed value has copy constructor
+ Additional protocols are as follows:
+ * `BoxedComparable` if the boxed value is `std::totally_ordered`
+ * `NSCopying` if the boxed value has copy constructor
  
  Call it like this:
  @code
