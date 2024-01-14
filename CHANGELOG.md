@@ -6,7 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## Unreleased
 
 ### Changed
-- `BlockUtil.h`: `makeBlock` is deprecated in ObjectiveC++. Modern versions of Clang allow conversions from lambdas to block directly doing essentially what `makeBlock` was doing. Note that it is still available and necessary in C++.
+- `BlockUtil.h`: `makeBlock` functionality is completely reworked. New functionality: 
+  * Wrap any callables including mutable lambdas or any other callable that provides non-const `operator()`.
+  * If the callable is movable it will be moved into the block, not copied. It will also be moved if the block is "copied to heap" 
+    by ObjectiveC runtime or `Block_copy` in plain C++.
+  * It is possible to use move-only callables.
+  * All of this is accomplished with NO dynamic memory allocation
 - `BoxUtil.h`: boxing now detects comparability and enables `compare:` not just via presence of operator `<=>` but also when only operators `<`, `==`, `<=` etc. are present.
 - `BoxUtil.h`: generated ObjectiveC box classes now have names unique to each shared library/main executable, preventing collisions if multiple modules use boxing.
 

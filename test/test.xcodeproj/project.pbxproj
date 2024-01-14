@@ -29,7 +29,8 @@
 		441779372B24C4930036AF9F /* NSNumberUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 441779362B24C4930036AF9F /* NSNumberUtilTests.mm */; };
 		441779392B24C6B00036AF9F /* NSObjectUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 441779382B24C6B00036AF9F /* NSObjectUtilTests.mm */; };
 		4417793B2B26FEA70036AF9F /* CoDispatchTestsNoexcept.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4417793A2B26FEA60036AF9F /* CoDispatchTestsNoexcept.cpp */; settings = {COMPILER_FLAGS = "-fno-exceptions"; }; };
-		448D57292B4E88A200A135E9 /* BlockUtilTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 448D57282B4E88A200A135E9 /* BlockUtilTest.cpp */; };
+		448D57292B4E88A200A135E9 /* BlockUtilTestCpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 448D57282B4E88A200A135E9 /* BlockUtilTestCpp.cpp */; };
+		448D572B2B50D28500A135E9 /* BlockUtilTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 448D572A2B50D28500A135E9 /* BlockUtilTest.mm */; };
 		44B947E72B477A2700B68C7E /* BoxUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 44B947E62B477A2700B68C7E /* BoxUtilTests.mm */; };
 		44B948032B4A4EE500B68C7E /* XCTestUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 44B947E92B49A75400B68C7E /* XCTestUtilTests.mm */; };
 		44B948042B4A4EF600B68C7E /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44B947FF2B49ACF900B68C7E /* XCTest.framework */; settings = {ATTRIBUTES = (Required, ); }; };
@@ -72,7 +73,8 @@
 		441779362B24C4930036AF9F /* NSNumberUtilTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NSNumberUtilTests.mm; sourceTree = "<group>"; };
 		441779382B24C6B00036AF9F /* NSObjectUtilTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NSObjectUtilTests.mm; sourceTree = "<group>"; };
 		4417793A2B26FEA60036AF9F /* CoDispatchTestsNoexcept.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = CoDispatchTestsNoexcept.cpp; sourceTree = "<group>"; };
-		448D57282B4E88A200A135E9 /* BlockUtilTest.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BlockUtilTest.cpp; sourceTree = "<group>"; };
+		448D57282B4E88A200A135E9 /* BlockUtilTestCpp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BlockUtilTestCpp.cpp; sourceTree = "<group>"; };
+		448D572A2B50D28500A135E9 /* BlockUtilTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BlockUtilTest.mm; sourceTree = "<group>"; };
 		44B947E52B4778EB00B68C7E /* BoxUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BoxUtil.h; sourceTree = "<group>"; };
 		44B947E62B477A2700B68C7E /* BoxUtilTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BoxUtilTests.mm; sourceTree = "<group>"; };
 		44B947E82B49A6ED00B68C7E /* XCTestUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XCTestUtil.h; sourceTree = "<group>"; };
@@ -98,7 +100,8 @@
 				441779212B202F3E0036AF9F /* Library */,
 				4417791C2B2013E00036AF9F /* doctest.h */,
 				441779152B20136E0036AF9F /* main.mm */,
-				448D57282B4E88A200A135E9 /* BlockUtilTest.cpp */,
+				448D57282B4E88A200A135E9 /* BlockUtilTestCpp.cpp */,
+				448D572A2B50D28500A135E9 /* BlockUtilTest.mm */,
 				44B947E62B477A2700B68C7E /* BoxUtilTests.mm */,
 				4417791F2B202DA30036AF9F /* CoDispatchTests.mm */,
 				441779342B2235B70036AF9F /* CoDispatchTestsCpp.cpp */,
@@ -234,7 +237,8 @@
 				441779352B2235B70036AF9F /* CoDispatchTestsCpp.cpp in Sources */,
 				441779392B24C6B00036AF9F /* NSObjectUtilTests.mm in Sources */,
 				4417793B2B26FEA70036AF9F /* CoDispatchTestsNoexcept.cpp in Sources */,
-				448D57292B4E88A200A135E9 /* BlockUtilTest.cpp in Sources */,
+				448D57292B4E88A200A135E9 /* BlockUtilTestCpp.cpp in Sources */,
+				448D572B2B50D28500A135E9 /* BlockUtilTest.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -360,6 +364,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -404,6 +409,7 @@
 				GCC_WARN_UNUSED_LABEL = YES;
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(PLATFORM_DIR)/Developer/Library/Frameworks";
+				LLVM_LTO = YES;
 				OTHER_CFLAGS = (
 					"-fprofile-instr-generate",
 					"-fcoverage-mapping",

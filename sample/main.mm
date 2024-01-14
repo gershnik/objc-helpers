@@ -19,13 +19,13 @@
 
 @implementation BlockDemo
 
-- (void) callBlock {
-    dispatch_sync(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), makeBlock([weakSelf = makeWeak(self)]() {
+- (void) callLambda {
+    dispatch_sync(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), [weakSelf = makeWeak(self)]() {
         
         auto self = makeStrong(weakSelf);
         
         [self aMethod];
-    }));
+    });
 }
 
 - (void) aMethod {
@@ -143,6 +143,64 @@ void CoroutineRunner() {
     
     NSRunLoop * theRL = [NSRunLoop currentRunLoop];
     while (shouldKeepRunning && [theRL runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]);
+}
+
+//MARK: - Block Wrapping
+
+void BlockWrapperDemo() {
+    [[BlockDemo new] callLambda];
+    
+    struct ConstCallable {
+        void operator()() const {
+            std::cout << "const callable called\n";
+        }
+    };
+    struct MutableCallable {
+        void operator()() {
+            std::cout << "mutable callable called\n";
+        }
+    };
+    
+    auto q = dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0);
+    dispatch_sync(q, makeBlock(ConstCallable{}));
+    dispatch_sync(q, makeMutableBlock(MutableCallable{}));
+    
+    //makeMutableBlock must be used with mutable lambdas
+    std::vector<char> initial;
+    dispatch_sync(q, makeMutableBlock([buffer = initial]() mutable {
+        buffer.push_back('a');
+    }));
+    
+    struct MultiCallable {
+        void operator()() const {
+            std::cout << "const multi callable called\n";
+        }
+        void operator()() {
+            std::cout << "mutable multi callable called\n";
+        }
+    };
+    
+    //no type deduction with multiple calls possible - we must tell makeBlock the type manually
+    dispatch_sync(q, makeBlock<void()>(MultiCallable{}));
+    dispatch_sync(q, makeMutableBlock<void()>(MultiCallable{}));
+    
+    //move only type
+    std::unique_ptr<int> p(new int(7));
+    dispatch_sync(q, makeBlock([p=std::move(p)]() {
+        std::cout << "got move only " << *p << "\n";
+    }));
+    
+    //You can save the block pointer for later. Keep in mind that
+    //ObjectiveC block machinery copies the block to heap in this case.
+    void (^block)() = makeBlock([](){});
+    block();
+    
+    //This is a block object not block pointer
+    auto blockObj = makeBlock([](){});
+    //It can be called directly
+    blockObj();
+    //or converted to block pointer
+    block = blockObj;
 }
 
 //MARK: - Boxing arbitrary objects
@@ -270,7 +328,7 @@ void NSStringCharAccessDemo() {
 
 int main(int argc, const char * argv[]) {
     
-    [[BlockDemo new] callBlock];
+    BlockWrapperDemo();
     
     BoxingDemo();
     

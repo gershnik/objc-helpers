@@ -30,6 +30,7 @@
 		447859562589D468004DD20F /* NSStringUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSStringUtil.h; sourceTree = "<group>"; };
 		447859582589DA95004DD20F /* NSObjectUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSObjectUtil.h; sourceTree = "<group>"; };
 		4478595A2589E6BF004DD20F /* NSNumberUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSNumberUtil.h; sourceTree = "<group>"; };
+		448D572C2B5118D300A135E9 /* BoxUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BoxUtil.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,6 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				447859542589A142004DD20F /* BlockUtil.h */,
+				448D572C2B5118D300A135E9 /* BoxUtil.h */,
 				4417792B2B2046240036AF9F /* CoDispatch.h */,
 				447859562589D468004DD20F /* NSStringUtil.h */,
 				447859582589DA95004DD20F /* NSObjectUtil.h */,

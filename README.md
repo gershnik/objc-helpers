@@ -5,13 +5,13 @@ An ever-growing collection of utilities to make coding on Apple platforms in C++
 <!-- TOC depthfrom:2 -->
 
 - [What's included?](#whats-included)
+    - [BlockUtil.h](#blockutilh)
     - [CoDispatch.h](#codispatchh)
     - [BoxUtil.h](#boxutilh)
     - [NSObjectUtil.h](#nsobjectutilh)
     - [NSStringUtil.h](#nsstringutilh)
     - [NSNumberUtil.h](#nsnumberutilh)
     - [XCTestUtil.h](#xctestutilh)
-    - [BlockUtil.h](#blockutilh)
     - [General notes](#general-notes)
 
 <!-- /TOC -->
@@ -23,6 +23,106 @@ The library is a collection of mostly independent header files. There is nothing
 `sample` directory contains a sample that demonstrates the usage of main features.
 
 The headers are as follows:
+
+### `BlockUtil.h` ###
+
+With modern Clang compiler you can seamlessly convert C++ lambdas to blocks like this:
+```c++
+dispatch_async(someQueue, []() { 
+    //do something
+})
+```
+This works and works great but there are a few things that don't:
+* You can only pass a *lambda* as a block, not any other kind of callable. For example this does not compile:
+  ```cpp
+  struct foo { void operator()() const {} };
+  dispatch_async(someQueue, foo{});
+  ```
+* You cannot pass a *mutable* lambda this way. This doesn't compile either
+  ```cpp
+  dispatch_async(someQueue, []() mutable { 
+     //do something
+  });
+  ```
+  Neither cannot you pass a block that captures anything mutable (like your lambda) - captured variables are all const
+* Your lambda captured variables are always *copied* into the block, not *moved*. If you have captures that are
+  expensive to copy - oh well...
+* Because of the above you cannot have move-only thinks in your block. Forget about using `std::unique_ptr` for example.
+
+The `BlockUtils.h` header gives you an ability to solve all of these problems.
+
+It provides two functions: `makeBlock` and `makeMutableBlock` that take any C++ callable as an input and return an object
+that is implicitly convertible to a block and can be passed to any block-taking API. They (or rather the object they return)
+have the following features:
+
+* You can wrap any C++ callable, not just a lambda. 
+* `makeBlock` returns a block that invokes `operator()` on a `const` callable and 
+  `makeMutableBlock` returns a block that invokes it on a non-const one. Thus `makeMutableBlock` can be used with 
+  mutable lambdas or any other callable that provides non-const `operator()`.
+* If callable is movable it will be moved into the block, not copied. It will also be moved if the block is "copied to heap" 
+  by ObjectiveC runtime or `Block_copy` in plain C++.
+* It is possible to use move-only callables.
+* All of this is accomplished with NO dynamic memory allocation
+  
+Some examples of their usage are as follows:
+
+```c++ 
+//Convert any callable
+struct foo { void operator()() const {} };
+dispatch_async(someQueue, makeBlock(foo{})); //this moves foo in since it's a temporary
+
+//Copy or move a callable in
+foo callable;
+dispatch_async(someQueue, makeBlock(callable));
+dispatch_async(someQueue, makeBlock(std::move(callable)));
+
+//Convert mutable lambdas
+int captureMeByValue;
+dispatch_async(someQueue, makeMutableBlock([=]() mutable { 
+    captureMeByValue = 5; //the local copy of captureMeByValue is mutable
+}));
+
+//Use move-only callables
+auto ptr = std::make_unique<SomeType>();
+dispatch_async(someQueue, makeBlock([ptr=str::move(ptr)]() {
+    ptr->someMethod();
+}));
+
+```
+
+One important thing to keep in mind is that the object returned from `makeBlock`/`makeMutableBlock` **is the block**. It is NOT a block pointer (e.g. Ret (^) (args)) and it doesn't "store" the block pointer inside. The block's lifetime is this object's lifetime and it ends when this object is destroyed. You can copy/move this object around and invoke it as any other C++ callable.
+You can also convert it to the block _pointer_ as needed either using implicit conversion or a `.get()` member function.
+In ObjectiveC++ the block pointer lifetime is not-related to the block object's one. The objective C++ ARC machinery will do the 
+necessary magic behind the scenes. For example:
+
+```c++
+//In ObjectiveC++
+void (^block)(int) = makeBlock([](int){});
+block(7); // this works even though the original block object is already destroyed
+```
+
+In plain C++ the code above would crash since there is no ARC magic. You need to manually manage block pointers lifecycle using
+`copy` and `Block_release`. For example:
+```c++
+//In plain C++ 
+void (^block)() = copy(makeBlock([](int){}));
+block(7); //this works because we made a copy
+Block_release(block);
+```
+
+`BlockUtil.h` also provides two helpers: `makeWeak` and `makeStrong` that simplify the "strongSelf" 
+casting dance around avoiding circular references when using blocks/lambdas.
+
+Here is the intended usage:
+
+```objc++ 
+dispatch_async(someQueue, [weakSelf = makeWeak(self)] () {
+    auto self = makeStrong(weakSelf);
+    if (!self)
+        return;
+    [self doSomething];
+});
+```
 
 ### `CoDispatch.h` ###
 
@@ -101,6 +201,7 @@ int main() {
 ```
 
 This facility can also be used both from plain C++ (.cpp) and ObjectiveC++ (.mm) files.
+
 
 ### `BoxUtil.h` ###
 
@@ -207,38 +308,6 @@ That, in the case of failure, try to obtain description using the following meth
 - Finally produce `"<full name of the type> object"` string.
 
 Thus if an object is printable using the typical means those will be automatically used. You can also make your own objects printable using either of the means above. The `testDescription` approach specifically exists to allow you to print something different for tests than in normal code.
-
-### `BlockUtil.h` ###
-
-> ℹ️️ Modern versions of Clang allow conversions of lambdas to blocks directly in **ObjectiveC++** (but not in plain C++). Thus `makeBlock` call described below is no longer necessary in ObjectiveC++ and is deprecated. It is still available in C++. 
-
-Allows clean and safe usage of C++ lambdas instead of ObjectiveC blocks which are also available
-in pure C++ on Apple platforms as an extension.
- 
-Why not use blocks? Blocks capture any variable mentioned in them automatically which
-causes no end of trouble with inadvertent capture and circular references. The most 
-common one is to accidentally capture `self` in a block. There is no protection in 
-ObjectiveC - you have to manually inspect code to ensure this doesn't happen. 
-Add in code maintenance, copy/paste and you are almost guaranteed to have bugs.
-Even if you have no bugs your block code is likely littered with strongSelf
-nonsense making it harder to understand.
- 
-C++ lambdas force you to explicitly specify what you capture, removing this whole problem.
-Unfortunately lambdas cannot be used as blocks. This header provides utility functions
-to fix this.
-The intended usage is something like this
-
-```objc++ 
-
-dispatch_async(makeBlock([weakSelf = makeWeak(self)] () {
-    auto self = makeStrong(weakSelf);
-    if (!self)
-        return;
-    [self doSomething];
-}));
-```
- 
-> ℹ️️  Note that in C++ the block returned from `makeBlock` needs to be released at some point via `Block_release` - there is no ARC to handle it for you.
 
 ### General notes ###
 
