@@ -248,9 +248,8 @@ inline namespace CO_DISPATCH_NS {
                 }
             }
             
-            template<class X=ValueCarrier>
-            requires(X::supportsExceptions)
             void storeException(std::exception_ptr ptr) noexcept
+            requires(ValueCarrier::supportsExceptions)
                 { this->m_storage = ptr; }
             
             auto moveOut() noexcept(!supportsExceptions && IsNoExceptExtractable) -> T {
@@ -290,9 +289,8 @@ inline namespace CO_DISPATCH_NS {
                 }
             }
             
-            template<class X=ValueCarrier>
-            requires(!X::isVoid)
-            auto getValueToken() noexcept(!supportsExceptions) -> X::ValueToken {
+            auto getValueToken() noexcept(!supportsExceptions) -> ValueCarrier::ValueToken
+            requires(!ValueCarrier::isVoid) {
                 return std::visit([] (auto & val) -> Holder * {
                     
                     using Stored = std::remove_cvref_t<decltype(val)>;
@@ -309,8 +307,8 @@ inline namespace CO_DISPATCH_NS {
             }
             
             template<class X=ValueCarrier>
-            requires(!X::isVoid)
-            static auto moveOutValue(X::ValueToken token) noexcept(IsNoExceptExtractable) -> T {
+            static auto moveOutValue(X::ValueToken token) noexcept(IsNoExceptExtractable) -> T
+            requires(!ValueCarrier::isVoid && std::is_same_v<X, ValueCarrier>) {
                 Holder & holder = *token;
                 if constexpr (std::is_reference_v<T>)
                     return static_cast<T>(*holder);
@@ -443,9 +441,8 @@ inline namespace CO_DISPATCH_NS {
              @return A token if the value has been set or nullptr otherwise
              @throws Stored exception if stored instead of value
              */
-            template<class X=DelayedValue>
-            requires(!X::isVoid)
             decltype(auto) getValueToken() noexcept(noexcept(m_value.getValueToken()))
+            requires(!DelayedValue::isVoid)
                 { return m_value.getValueToken(); }
             
             /**
@@ -453,8 +450,8 @@ inline namespace CO_DISPATCH_NS {
              @return Stored value
              */
             template<class X=DelayedValue>
-            requires(!X::isVoid)
             static decltype(auto) moveOutValue(typename X::ValueToken token) noexcept(noexcept(X::moveOutValue(token)))
+            requires(!DelayedValue::isVoid && std::is_same_v<X, DelayedValue>)
                 { return X::moveOutValue(token); }
             
             //Client awaitable interface
@@ -477,9 +474,8 @@ inline namespace CO_DISPATCH_NS {
             void emplaceReturnValue(Args && ...args) noexcept(noexcept(m_value.emplaceValue(std::forward<Args>(args)...)))
                 { m_value.emplaceValue(std::forward<Args>(args)...); }
             
-            template<class X=DelayedValue>
-            requires(X::supportsExceptions)
             void storeException(std::exception_ptr ptr) noexcept
+            requires(DelayedValue::supportsExceptions)
                 { m_value.storeException(ptr); }
             
             /**
@@ -657,18 +653,17 @@ inline namespace CO_DISPATCH_NS {
                 { m_sharedState->emplaceReturnValue(std::forward<Args>(args)...); }
             
             template<class X=DelayedValue>
-            requires(!X::isVoid)
-            void success(typename X::MoveInArgType val) const noexcept(noexcept(m_sharedState->emplaceReturnValue(std::forward<decltype(val)>(val)))) 
+            void success(typename X::MoveInArgType val) const noexcept(noexcept(m_sharedState->emplaceReturnValue(std::forward<decltype(val)>(val))))
+            requires(!DelayedValue::isVoid && std::is_same_v<X, DelayedValue>)
                 { m_sharedState->emplaceReturnValue(std::forward<decltype(val)>(val)); }
             
-            template<class X=DelayedValue>
-            requires(X::supportsExceptions)
-            void failure(std::exception_ptr ptr) const noexcept 
+            void failure(std::exception_ptr ptr) const noexcept
+            requires(DelayedValue::supportsExceptions)
                 { m_sharedState->storeException(ptr); }
             
-            template<class Exc, class X=DelayedValue>
-            requires(X::supportsExceptions)
-            void failure(Exc && exc) const noexcept 
+            template<class Exc>
+            void failure(Exc && exc) const noexcept
+            requires(DelayedValue::supportsExceptions)
                 { m_sharedState->storeException(std::make_exception_ptr(std::forward<Exc>(exc))); }
         private:
             mutable Util::RefcntPtr<State> m_sharedState;
