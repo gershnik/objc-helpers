@@ -1,5 +1,7 @@
 #include <objc-helpers/BlockUtil.h>
 
+#include <Foundation/Foundation.h>
+
 #include "doctest.h"
 
 TEST_SUITE_BEGIN( "BlockUtilTests" );
@@ -117,10 +119,45 @@ TEST_CASE( "makeBlock" ) {
     
     {
         foo::record.clear();
+        auto b = makeBlock(foo{});
+        decltype(b) b1 = std::move(b);
+        CHECK(b1(42) == 42);
+    }
+    CHECK(foo::record == "dm~mo~~");
+    
+    {
+        foo::record.clear();
+        auto b = makeBlock(fooMoveOnly{});
+        decltype(b) b1 = std::move(b);
+        CHECK(b1(42) == 42);
+    }
+    CHECK(foo::record == "dm~mo~~");
+    
+    {
+        foo::record.clear();
         auto b = makeBlock(fooCopyOnly{});
         decltype(b) b1 = std::move(b);
+        CHECK(b1(42) == 42);
     }
-    CHECK(foo::record == "dc~c~~");
+    CHECK(foo::record == "dc~co~~");
+}
+
+@interface MakeStrongCheck : NSObject {
+@public int i;
+}
+@end
+
+@implementation MakeStrongCheck
+@end
+
+TEST_CASE( "makeStrong" ) {
+    
+    auto str = [MakeStrongCheck new];
+    auto weak = makeWeak(str);
+    REQUIRE(bool(weak));
+    auto str1 = makeStrong(weak);
+    bool equal = str == str1;
+    CHECK(equal);
 }
 
 TEST_SUITE_END();

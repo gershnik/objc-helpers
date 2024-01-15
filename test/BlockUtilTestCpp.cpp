@@ -123,10 +123,27 @@ TEST_CASE( "makeBlock" ) {
     
     {
         foo::record.clear();
+        auto b = makeBlock(foo{});
+        decltype(b) b1 = std::move(b);
+        CHECK(b1(42) == 42);
+    }
+    CHECK(foo::record == "dm~mo~~");
+    
+    {
+        foo::record.clear();
+        auto b = makeBlock(fooMoveOnly{});
+        decltype(b) b1 = std::move(b);
+        CHECK(b1(42) == 42);
+    }
+    CHECK(foo::record == "dm~mo~~");
+    
+    {
+        foo::record.clear();
         auto b = makeBlock(fooCopyOnly{});
         decltype(b) b1 = std::move(b);
+        CHECK(b1(42) == 42);
     }
-    CHECK(foo::record == "dc~c~~");
+    CHECK(foo::record == "dc~co~~");
 }
 
 TEST_SUITE_END();
