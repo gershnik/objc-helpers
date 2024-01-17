@@ -11,6 +11,8 @@
 
 #include "NSObjectUtil.h"
 
+#ifdef __OBJC__
+
 #import <Foundation/Foundation.h>
 
 /**
@@ -45,6 +47,6 @@ struct NSNumberEqual
     }
 };
 
-
+#endif  //__OBJC__
 
 #endif

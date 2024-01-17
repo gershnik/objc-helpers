@@ -324,6 +324,39 @@ void NSStringCharAccessDemo() {
     std::cout << str << '\n';
 }
 
+//MARK: - Conversions between NSString and character ranges
+
+void NSStringConversionsDemo() {
+    
+    using namespace std::literals;
+    
+    auto eq = NSStringEqual();
+    
+    assert(eq(makeNSString(u"abc"), @"abc"));
+    assert(eq(makeNSString(u"abc"s), @"abc"));
+    assert(eq(makeNSString(u"abc"sv), @"abc"));
+    
+    const char16_t * str = nullptr;
+    assert(makeNSString(str) == nullptr);
+    str = u"abc";
+    assert(eq(makeNSString(str), @"abc"));
+    
+    assert(eq(makeNSString({'a', 'b', 'c'}), @"abc"));
+    
+    std::vector<char> vec = {'a', 'b', 'c'};
+    assert(eq(makeNSString(vec), @"abc"));
+    
+    auto span = std::span(vec.begin(), vec.end());
+    assert(eq(makeNSString(span), @"abc"));
+    
+    assert(makeStdString<char16_t>(@"abc") == u"abc");
+    assert(makeStdString<char>(@"abc", 1) == "bc");
+    assert(makeStdString<char32_t>(@"abc", 1, 1) == U"b");
+    assert(makeStdString<wchar_t>(NSStringCharAccess(@"abc") | std::views::take(2)) == L"ab");
+    NSStringCharAccess access(@"abc");
+    assert(makeStdString<char8_t>(access.begin(), access.end()) == u8"abc");
+}
+
 //MARK: - main
 
 int main(int argc, const char * argv[]) {
@@ -341,6 +374,8 @@ int main(int argc, const char * argv[]) {
     MapByObjectDemo();
     
     NSStringCharAccessDemo();
+    
+    NSStringConversionsDemo();
     
     CoroutineRunner();
     

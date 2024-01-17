@@ -9,11 +9,33 @@
 #ifndef HEADER_NS_STRING_UTIL_INCLUDED
 #define HEADER_NS_STRING_UTIL_INCLUDED
 
+#if __cplusplus < 202002L
+    #error This header requires C++20 mode or above
+#endif
+
+#include <version>
+
+#if __cpp_lib_ranges < 201911L
+    #error This header requires C++20 mode or above with ranges support
+#endif
+
 #include "NSObjectUtil.h"
 
-#import <Foundation/Foundation.h>
+#ifdef __OBJC__
+    #import <Foundation/Foundation.h>
+#else
+    #include <CoreFoundation/CoreFoundation.h>
+#endif
 
+#include <ranges>
+#include <string_view>
 #include <ostream>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnullability-extension"
+
+
+#ifdef __OBJC__
 
 /**
  Comparator of NSString * for std::map, std::set etc.
@@ -23,7 +45,7 @@ class NSStringLess
 public:
     NSStringLess(NSStringCompareOptions options = 0): _options(options) {}
     
-    bool operator()(NSString * lhs, NSString * rhs) const noexcept
+    bool operator()(NSString * __nullable lhs, NSString * __nullable rhs) const noexcept
     {
         if (!lhs) return rhs;
         if (!rhs) return false;
@@ -40,12 +62,12 @@ private:
 class NSStringLocaleLess
 {
 public:
-    NSStringLocaleLess(NSLocale * locale, NSStringCompareOptions options = 0):
+    NSStringLocaleLess(NSLocale * __nullable locale, NSStringCompareOptions options = 0):
         _options(options),
         _locale(locale)
     {}
     
-    bool operator()(NSString * lhs, NSString * rhs) const noexcept
+    bool operator()(NSString * __nullable lhs, NSString * __nullable rhs) const noexcept
     {
         if (!lhs) return rhs;
         if (!rhs) return false;
@@ -54,7 +76,7 @@ public:
     }
 private:
     NSStringCompareOptions _options = 0;
-    NSLocale * _locale;
+    NSLocale * __nullable _locale;
 };
 
 /**
@@ -64,7 +86,7 @@ private:
  */
 struct NSStringEqual
 {
-    bool operator()(NSString * lhs, NSString * rhs) const
+    bool operator()(NSString * __nullable lhs, NSString * __nullable rhs) const
     {
         if (!lhs) return !rhs;
         return [lhs isEqualToString:rhs];
@@ -74,7 +96,7 @@ struct NSStringEqual
 /**
  Serialization into ostream
  */
-inline std::ostream & operator<<(std::ostream & stream, NSString * str)
+inline std::ostream & operator<<(std::ostream & stream, NSString * __nullable str)
 {
     return stream << str.UTF8String;
 }
@@ -88,7 +110,7 @@ template<>
 struct std::formatter<NSString *> : std::formatter<std::string_view>
 {
     template<class FormatCtx>
-    auto format(NSString * obj, FormatCtx & ctx)
+    auto format(NSString * __nullable obj, FormatCtx & ctx)
     {
         const char * str;
         
@@ -112,7 +134,7 @@ template<>
 struct fmt::formatter<NSString *> : fmt::formatter<std::string_view>
 {
     template<class FormatCtx>
-    auto format(NSString * obj, FormatCtx & ctx)
+    auto format(NSString * __nullable obj, FormatCtx & ctx)
     {
         const char * str;
         
@@ -127,6 +149,27 @@ struct fmt::formatter<NSString *> : fmt::formatter<std::string_view>
 
 #endif
 
+#endif //__OBJC__
+
+
+template<class Char>
+concept CharTypeConvertibleWithNSString =
+    std::is_same_v<Char, char> ||
+    std::is_same_v<Char, char8_t> ||
+    std::is_same_v<Char, char16_t> ||
+    std::is_same_v<Char, char32_t> ||
+    std::is_same_v<Char, wchar_t>
+;
+
+template<class Char> struct kCFStringEncodingForImpl;
+template<> struct kCFStringEncodingForImpl<char>     { static constexpr auto value = kCFStringEncodingUTF8; };
+template<> struct kCFStringEncodingForImpl<char8_t>  { static constexpr auto value = kCFStringEncodingUTF8; };
+template<> struct kCFStringEncodingForImpl<char32_t> { static constexpr auto value = kCFStringEncodingUTF32LE; };
+template<> struct kCFStringEncodingForImpl<wchar_t>  { static constexpr auto value = kCFStringEncodingUTF32LE; };
+
+template<class Char>
+constexpr CFStringBuiltInEncodings kCFStringEncodingFor = kCFStringEncodingForImpl<Char>::value;
+
 
 /**
  Accessor for NSString characters via STL container interface.
@@ -138,7 +181,7 @@ struct fmt::formatter<NSString *> : fmt::formatter<std::string_view>
 class NSStringCharAccess
 {
 public:
-    using value_type = UniChar;
+    using value_type = char16_t;
     using size_type = CFIndex;
     using difference_type = decltype(CFIndex(0) - CFIndex(0));
     using reference = value_type;
@@ -160,6 +203,8 @@ public:
         
         value_type operator*() const noexcept
             { return (*_owner)[_idx]; }
+        value_type operator[](difference_type i) const noexcept
+            { return (*_owner)[_idx + i]; }
         
         const_iterator & operator++() noexcept
             { ++_idx; return *this; }
@@ -174,9 +219,9 @@ public:
         const_iterator & operator-=(difference_type val) noexcept
             { _idx -= val; return *this; }
         
-        friend const_iterator operator+(const const_iterator & lhs, int rhs) noexcept
+        friend const_iterator operator+(const const_iterator & lhs, difference_type rhs) noexcept
             { return const_iterator(lhs._owner, lhs._idx + rhs); }
-        friend const_iterator operator+(int lhs, const const_iterator & rhs) noexcept
+        friend const_iterator operator+(difference_type lhs, const const_iterator & rhs) noexcept
             { return const_iterator(rhs._owner, rhs._idx + lhs); }
         
         friend difference_type operator-(const const_iterator & lhs, const const_iterator & rhs) noexcept
@@ -199,13 +244,21 @@ public:
         
         CFIndex index() const noexcept
             { return _idx; }
+        
+        CFStringRef __nullable getCFString() const noexcept
+            { return _owner ? _owner->_string : nullptr; }
+#ifdef __OBJC__
+        NSString * __nullable getString() const noexcept
+            { return (__bridge NSString *)getCFString(); }
+#endif
+        
     private:
-        const_iterator(const NSStringCharAccess * owner, CFIndex idx) noexcept:
+        const_iterator(const NSStringCharAccess * __nonnull owner, CFIndex idx) noexcept:
             _owner(owner),
             _idx(idx)
         {}
     private:
-        const NSStringCharAccess * _owner = nullptr;
+        const NSStringCharAccess * __nullable _owner = nullptr;
         CFIndex _idx = -1;
     };
     
@@ -220,27 +273,39 @@ private:
         Indirect
     };
 public:
-    NSStringCharAccess(NSString * str) noexcept:
-        _string((__bridge CFStringRef)str)
+    NSStringCharAccess(std::nullptr_t) noexcept:
+        _string(nullptr)
+    {}
+    
+#ifdef __OBJC__
+    NSStringCharAccess(NSString * __nullable str) noexcept:
+        NSStringCharAccess((__bridge CFStringRef)str)
+    {}
+#endif
+    
+    NSStringCharAccess(CFStringRef __nullable str) noexcept:
+        _string(str)
     {
         if (_string)
         {
             _size = CFStringGetLength(_string);
-            if ( (_buffer.directUniChar = CFStringGetCharactersPtr(_string)) )
+            if ( (_buffer.directUniChar = (char16_t *)CFStringGetCharactersPtr(_string)) )
                 _bufferType = DirectUniChar;
             else if ( (_buffer.directCString = CFStringGetCStringPtr(_string, kCFStringEncodingASCII)) )
                 _bufferType = DirectCString;
         }
     }
     
-    CFStringRef getCFString() const noexcept
+    CFStringRef __nullable getCFString() const noexcept
         { return _string; }
     
-    NSString * getString() const noexcept
+#ifdef __OBJC__
+    NSString * __nullable getString() const noexcept
         { return (__bridge NSString *)_string; }
+#endif
 
 
-    UniChar operator[](CFIndex idx) const noexcept
+    value_type operator[](CFIndex idx) const noexcept
     {
         if (idx < 0 || idx >= _size)
             return 0;
@@ -248,7 +313,7 @@ public:
         if (_bufferType == DirectUniChar)
             return _buffer.directUniChar[idx];
         if (_bufferType == DirectCString)
-            return UniChar(_buffer.directCString[idx]);
+            return value_type(_buffer.directCString[idx]);
             
         if (idx >= _end || idx < _start)
             fill(idx);
@@ -287,15 +352,15 @@ private:
         _end = _start + CFIndex(std::size(_buffer.indirect));
         if (_end > _size)
             _end = _size;
-        CFStringGetCharacters(_string, CFRangeMake(_start, _end - _start), _buffer.indirect);
+        CFStringGetCharacters(_string, CFRangeMake(_start, _end - _start), (UniChar *)_buffer.indirect);
     }
 private:
-    CFStringRef _string = nil;
+    CFStringRef __nullable _string = nil;
     union
     {
-        mutable UniChar indirect[64];
-        const UniChar * directUniChar;
-        const char * directCString;
+        mutable char16_t indirect[64];
+        const char16_t * __nonnull directUniChar;
+        const char * __nonnull directCString;
     } _buffer;
     BufferType _bufferType = Indirect;
     mutable CFIndex _start = 0;
@@ -303,5 +368,102 @@ private:
     CFIndex _size = 0;
 };
 
+template<CharTypeConvertibleWithNSString Char>
+auto makeStdString(CFStringRef __nullable str, CFIndex start = 0, CFIndex length = -1) {
+    using RetType = std::basic_string<Char>;
+    if (!str)
+        return RetType();
+    if (start < 0)
+        start = 0;
+    if (length < 0) {
+        length = CFStringGetLength(str);
+        length -= std::min(length, start);
+    }
+    if constexpr (std::is_same_v<Char, char16_t>) {
+        RetType ret(size_t(length), '\0');
+        CFStringGetCharacters(str, {start, length}, (UniChar *)ret.data());
+        return ret;
+    } else {
+        constexpr auto enc = kCFStringEncodingFor<Char>;
+        CFIndex bufLen = 0;
+        auto res = CFStringGetBytes(str, {start, length}, enc, 0, false, nullptr, 0, &bufLen);
+        if (res != length)
+            return RetType();
+        RetType ret(size_t(bufLen) / sizeof(Char), '\0');
+        CFStringGetBytes(str, {start, length}, enc, 0, false, (UInt8 *)ret.data(), bufLen, nullptr);
+        return ret;
+    }
+}
+
+#ifdef __OBJC__
+
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeStdString(NSString * __nullable str, NSUInteger location = 0, NSUInteger length = NSUInteger(-1)) {
+    return makeStdString<Char>((__bridge CFStringRef)str, CFIndex(location), CFIndex(length));
+}
 
 #endif
+
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeStdString(NSStringCharAccess::const_iterator first, NSStringCharAccess::const_iterator last) {
+    return makeStdString<Char>(first.getCFString(), first.index(), last.index() - first.index());
+}
+
+
+template<CharTypeConvertibleWithNSString Char, std::ranges::common_range Range>
+requires(std::is_same_v<std::ranges::iterator_t<std::remove_cvref_t<Range>>, NSStringCharAccess::const_iterator>)
+inline auto makeStdString(Range && range) {
+    return makeStdString<Char>(std::ranges::begin(range), std::ranges::end(range));
+}
+
+template<std::ranges::contiguous_range CharRange>
+requires(CharTypeConvertibleWithNSString<std::ranges::range_value_t<CharRange>>)
+inline auto makeCFString(const CharRange & range)  -> CFStringRef __nullable {
+    if (range.empty())
+        return CFSTR("");
+    using Char = std::ranges::range_value_t<CharRange>;
+    if constexpr (std::is_same_v<Char, char16_t>) {
+        return CFStringCreateWithCharacters(nullptr, (const UniChar *)range.data(), CFIndex(range.size()));
+    } else {
+        return CFStringCreateWithBytes(nullptr, (const UInt8 *)range.data(), CFIndex(range.size() * sizeof(Char)),
+                                       kCFStringEncodingFor<Char>, false);
+    }
+}
+
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeCFString(const Char * __nullable str) -> CFStringRef __nullable {
+    if (!str)
+        return nullptr;
+    return makeCFString(std::basic_string_view<Char>(str));
+}
+
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeCFString(const std::initializer_list<Char> & str) {
+    return makeCFString(std::basic_string_view<Char>(str.begin(), str.size()));
+}
+
+
+#ifdef __OBJC__
+
+template<std::ranges::contiguous_range CharRange>
+requires(CharTypeConvertibleWithNSString<std::ranges::range_value_t<CharRange>>)
+inline auto makeNSString(const CharRange & range) {
+    return (__bridge_transfer NSString *)makeCFString(range);
+}
+
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeNSString(const Char * __nullable str) {
+    return (__bridge_transfer NSString *)makeCFString(str);
+}
+
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeNSString(const std::initializer_list<Char> & str) {
+    return (__bridge_transfer NSString *)makeCFString(str);
+}
+
+#endif
+
+#pragma clang diagnostic pop
+
+#endif
+

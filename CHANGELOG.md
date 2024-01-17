@@ -12,8 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
     by ObjectiveC runtime or `Block_copy` in plain C++.
   * It is possible to use move-only callables.
   * All of this is accomplished with NO dynamic memory allocation
+- `NSStringCharAccess` now conforms completely to `std::ranges::random_access_range`
 - `BoxUtil.h`: boxing now detects comparability and enables `compare:` not just via presence of operator `<=>` but also when only operators `<`, `==`, `<=` etc. are present.
 - `BoxUtil.h`: generated ObjectiveC box classes now have names unique to each shared library/main executable, preventing collisions if multiple modules use boxing.
+
+### Added
+- `NSStringUtil.h`: added `makeNSString`, `makeCFString` and `makeStdString` conversion functions between C++ character ranges and ObjectiveC strings.
 
 ## [2.3] - 2024-01-09
 

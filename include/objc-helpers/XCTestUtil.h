@@ -9,6 +9,10 @@
 #ifndef HEADER_XCTEST_UTIL_INCLUDED
 #define HEADER_XCTEST_UTIL_INCLUDED
 
+#if !__cpp_concepts
+    #error This header requires C++20 mode or above with concepts support
+#endif
+
 #import <XCTest/XCTest.h>
 
 #include <sstream>

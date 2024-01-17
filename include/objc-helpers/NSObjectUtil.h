@@ -9,6 +9,8 @@
 #ifndef HEADER_NS_OBJECT_UTIL_INCLUDED
 #define HEADER_NS_OBJECT_UTIL_INCLUDED
 
+#ifdef __OBJC__
+
 #import <Foundation/Foundation.h>
 
 #include <ostream>
@@ -113,5 +115,7 @@ struct fmt::formatter<T, std::enable_if_t<std::is_convertible_v<T, id<NSObject>>
 };
 
 #endif
+
+#endif //__OBJC__
 
 #endif

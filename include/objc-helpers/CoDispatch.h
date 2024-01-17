@@ -9,6 +9,16 @@
 #ifndef HEADER_CO_DISPATCH_INCLUDED
 #define HEADER_CO_DISPATCH_INCLUDED
 
+#ifndef __cplusplus
+    #error This header requires C++
+#endif
+
+#include <version>
+
+#if !__cpp_impl_coroutine || !__cpp_lib_coroutine
+    #error This header requires C++20 mode or above with coroutine support
+#endif
+
 #include <coroutine>
 #include <variant>
 #include <memory>
@@ -20,9 +30,6 @@
     #include <Block.h>
 #endif
 
-#if !__cpp_impl_coroutine || !__cpp_lib_coroutine
-    #error This header requires C++20 mode or above with coroutine support
-#endif
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-extension"
