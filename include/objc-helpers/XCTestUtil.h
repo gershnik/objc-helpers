@@ -18,7 +18,8 @@
 #import <XCTest/XCTest.h>
 
 #include <sstream>
-#include <cxxabi.h>
+#include <string>
+#include <stdarg.h>
 
 namespace TestUtil {
     using std::to_string;
@@ -40,14 +41,23 @@ namespace TestUtil {
         { str << obj };
     };
     
-    inline auto demangle(const char * name) -> std::string {
-
-        int status = 0;
-        std::unique_ptr<char, void(*)(void*)> res {
-            abi::__cxa_demangle(name, nullptr, nullptr, &status),
-            std::free
-        };
-        return (status==0) ? res.get() : name ;
+    auto sprintf(std::string & res, const char * format, ...) -> int {
+        va_list vl;
+        va_start(vl, format);
+        const int size = vsnprintf(0, 0, format, vl);
+        va_end(vl);
+        if (size <= 0)
+            return size;
+        size_t appendPos = res.size();
+        size_t appendSize = size_t(size) + 1;
+        res.resize(appendPos + appendSize);
+        va_start(vl, format);
+        const int ret = vsnprintf(&res[appendPos], appendSize, format, vl);
+        va_end(vl);
+        if (ret <= 0)
+            return ret;
+        res.resize(appendPos + size_t(ret));
+        return ret;
     }
     
     template<class T>
@@ -64,7 +74,9 @@ namespace TestUtil {
             str << val;
             return @(str.str().c_str());
         } else {
-            return [NSString stringWithFormat:@"%s object", demangle(typeid(T).name()).c_str()];
+            std::string res;
+            __builtin_dump_struct(&val, sprintf, res);
+            return @(res.c_str());
         }
     }
 }
