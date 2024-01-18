@@ -54,9 +54,7 @@ namespace TestUtil {
         va_start(vl, format);
         const int ret = vsnprintf(&res[appendPos], appendSize, format, vl);
         va_end(vl);
-        if (ret <= 0)
-            return ret;
-        res.resize(appendPos + size_t(ret));
+        res.resize(appendPos + size_t(ret > 0 ? ret : 0));
         return ret;
     }
     
