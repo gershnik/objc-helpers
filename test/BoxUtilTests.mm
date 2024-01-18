@@ -33,6 +33,24 @@ TEST_CASE( "integer" ) {
     CHECK([box(6) compare:box(5)] == NSOrderedDescending);
     CHECK([box(6) compare:box(6)] == NSOrderedSame);
     
+    auto b = box(27);
+    CHECK([b compare:b] == NSOrderedSame);
+    
+    @try {
+        NSObject<BoxedComparable> * n;
+        [box(5) compare:n];
+        FAIL("able to compare with nil");
+    } @catch (NSException * exc) {
+        CHECK([exc.name isEqualToString:NSInvalidArgumentException]);
+    }
+    
+    @try {
+        [box(5) compare:box(5l)];
+        FAIL("able to compare with different class");
+    } @catch (NSException * exc) {
+        CHECK([exc.name isEqualToString:NSInvalidArgumentException]);
+    }
+    
     @try {
         [[maybe_unused]] auto obj1 = (NSObject *)[[obj.class alloc] init];
         FAIL("able to call init");

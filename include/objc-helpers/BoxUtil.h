@@ -120,7 +120,7 @@ namespace BoxMakerDetail __attribute__((visibility("hidden"))) {
 template<class T>
 class __attribute__((visibility("hidden"))) BoxMaker {
 private:
-    static auto detectBoxedType() {
+    static consteval auto detectBoxedType() {
         if constexpr (std::totally_ordered<T>) {
             if constexpr (std::is_copy_constructible_v<T>) {
                 return (NSObject<BoxedValue, BoxedComparable, NSCopying> *)nullptr;

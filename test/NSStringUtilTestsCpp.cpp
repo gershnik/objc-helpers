@@ -32,6 +32,7 @@ TEST_CASE("makeCFString") {
     
     
     {
+        CHECK(eq(hold(makeCFString(u"")), CFSTR("")));
         CHECK(eq(hold(makeCFString(u"abc")), CFSTR("abc")));
         CHECK(eq(hold(makeCFString(u"abc"s)), CFSTR("abc")));
         CHECK(eq(hold(makeCFString(u"abc"sv)), CFSTR("abc")));
@@ -55,6 +56,7 @@ TEST_CASE("makeCFString") {
     }
     
     {
+        CHECK(eq(hold(makeCFString("")), CFSTR("")));
         CHECK(eq(hold(makeCFString("abc")), CFSTR("abc")));
         
         const char * str = nullptr;
@@ -74,6 +76,7 @@ TEST_CASE("makeCFString") {
     }
     
     {
+        CHECK(eq(hold(makeCFString(u8"")), CFSTR("")));
         CHECK(eq(hold(makeCFString(u8"abc")), CFSTR("abc")));
         
         const char8_t * str = nullptr;
@@ -93,6 +96,7 @@ TEST_CASE("makeCFString") {
     }
     
     {
+        CHECK(eq(hold(makeCFString(u8"")), CFSTR("")));
         CHECK(eq(hold(makeCFString(u8"abc")), CFSTR("abc")));
         
         const char8_t * str = nullptr;
@@ -112,6 +116,7 @@ TEST_CASE("makeCFString") {
     }
     
     {
+        CHECK(eq(hold(makeCFString(U"")), CFSTR("")));
         CHECK(eq(hold(makeCFString(U"abc")), CFSTR("abc")));
         
         const char32_t * str = nullptr;
@@ -131,6 +136,7 @@ TEST_CASE("makeCFString") {
     }
     
     {
+        CHECK(eq(hold(makeCFString(L"")), CFSTR("")));
         CHECK(eq(hold(makeCFString(L"abc")), CFSTR("abc")));
         
         const wchar_t * str = nullptr;
@@ -159,41 +165,54 @@ TEST_CASE("makeStdString") {
     auto malformed = hold(makeCFString(u"\xD800"));
     
     {
+        CHECK(makeStdString<char16_t>((CFStringRef)nullptr) == u"");
         CHECK(makeStdString<char16_t>(CFSTR("abc")) == u"abc");
         CHECK(makeStdString<char16_t>(CFSTR("abc"), 1) == u"bc");
         CHECK(makeStdString<char16_t>(CFSTR("abc"), 1, 1) == u"b");
+        CHECK(makeStdString<char16_t>(CFSTR("abc"), -1, 1) == u"a");
+        CHECK(makeStdString<char16_t>(CFSTR("abc"), 1, 7) == u"bc");
+        CHECK(makeStdString<char16_t>(CFSTR("abc"), 3, 5) == u"");
+        CHECK(makeStdString<char16_t>(CFSTR("abc"), 1, 0) == u"");
         CHECK(makeStdString<char16_t>(NSStringCharAccess(CFSTR("abc")) | take(2)) == u"ab");
         CHECK(makeStdString<char16_t>(access.begin(), access.end()) == u"abc");
         CHECK(makeStdString<char16_t>(malformed) == u"\xD800");
     }
     {
+        CHECK(makeStdString<char>((CFStringRef)nullptr) == "");
         CHECK(makeStdString<char>(CFSTR("abc")) == "abc");
         CHECK(makeStdString<char>(CFSTR("abc"), 1) == "bc");
         CHECK(makeStdString<char>(CFSTR("abc"), 1, 1) == "b");
+        CHECK(makeStdString<char>(CFSTR("abc"), -1, 1) == "a");
         CHECK(makeStdString<char>(NSStringCharAccess(CFSTR("abc")) | take(2)) == "ab");
         CHECK(makeStdString<char>(access.begin(), access.end()) == "abc");
         CHECK(makeStdString<char>(malformed) == "");
     }
     {
+        CHECK(makeStdString<char8_t>((CFStringRef)nullptr) == u8"");
         CHECK(makeStdString<char8_t>(CFSTR("abc")) == u8"abc");
         CHECK(makeStdString<char8_t>(CFSTR("abc"), 1) == u8"bc");
         CHECK(makeStdString<char8_t>(CFSTR("abc"), 1, 1) == u8"b");
+        CHECK(makeStdString<char8_t>(CFSTR("abc"), -1, 1) == u8"a");
         CHECK(makeStdString<char8_t>(NSStringCharAccess(CFSTR("abc")) | take(2)) == u8"ab");
         CHECK(makeStdString<char8_t>(access.begin(), access.end()) == u8"abc");
         CHECK(makeStdString<char8_t>(malformed) == u8"");
     }
     {
+        CHECK(makeStdString<char32_t>((CFStringRef)nullptr) == U"");
         CHECK(makeStdString<char32_t>(CFSTR("abc")) == U"abc");
         CHECK(makeStdString<char32_t>(CFSTR("abc"), 1) == U"bc");
         CHECK(makeStdString<char32_t>(CFSTR("abc"), 1, 1) == U"b");
+        CHECK(makeStdString<char32_t>(CFSTR("abc"), -1, 1) == U"a");
         CHECK(makeStdString<char32_t>(NSStringCharAccess(CFSTR("abc")) | take(2)) == U"ab");
         CHECK(makeStdString<char32_t>(access.begin(), access.end()) == U"abc");
         CHECK(makeStdString<char32_t>(malformed) == U"");
     }
     {
+        CHECK(makeStdString<wchar_t>((CFStringRef)nullptr) == L"");
         CHECK(makeStdString<wchar_t>(CFSTR("abc")) == L"abc");
         CHECK(makeStdString<wchar_t>(CFSTR("abc"), 1) == L"bc");
         CHECK(makeStdString<wchar_t>(CFSTR("abc"), 1, 1) == L"b");
+        CHECK(makeStdString<wchar_t>(CFSTR("abc"), -1, 1) == L"a");
         CHECK(makeStdString<wchar_t>(NSStringCharAccess(CFSTR("abc")) | take(2)) == L"ab");
         CHECK(makeStdString<wchar_t>(access.begin(), access.end()) == L"abc");
         CHECK(makeStdString<wchar_t>(malformed) == L"");

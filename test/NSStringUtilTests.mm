@@ -98,6 +98,7 @@ TEST_CASE("char access") {
         auto * str = @"abc";
         CHECK(r::equal(NSStringCharAccess(str), u"abc"sv));
         CHECK(r::equal(NSStringCharAccess(str) | v::reverse, u"cba"sv));
+        CHECK(NSStringCharAccess(str).getString() == str);
     }
     {
         auto * str = @"яж";
@@ -110,11 +111,15 @@ TEST_CASE("char access") {
         CHECK(r::equal(NSStringCharAccess(str) | v::reverse, u"57"sv));
     }
     
+    CHECK(NSStringCharAccess(nullptr).getString() == nullptr);
+    CHECK(NSStringCharAccess::iterator().getString() == nullptr);
+    
     auto access = NSStringCharAccess(@"abcd");
     auto it1 = access.begin() + 1;
     auto it2 = it1 + 2;
     auto substr = [access.getString() substringWithRange:{NSUInteger(it1.index()), NSUInteger(it2.index() - it1.index())}];
     CHECK(NSStringEqual()(substr, @"bc"));
+    CHECK(it1.getString() == it2.getString());
     CHECK(it1 < it2);
     CHECK(it1 <= it2);
     CHECK(it2 > it1);
@@ -130,6 +135,7 @@ TEST_CASE("char access") {
     CHECK(it2 == access.begin());
     CHECK(it1 - it2 == 1);
     CHECK(1 + it1 == it1 + 1);
+    CHECK(it2[1] == *it1);
     it1 -= 1;
     CHECK(it1 == it2);
     it1 += 1;
@@ -149,6 +155,7 @@ TEST_CASE("char access") {
     CHECK(NSStringCharAccess(@"").empty());
     
     CHECK(CFStringCompare(NSStringCharAccess(@"abcd").getCFString(), CFSTR("abcd"), 0) == 0);
+    CHECK(NSStringCharAccess(nullptr).getCFString() == nullptr);
 }
 
 TEST_CASE("makeNSString") {
@@ -282,6 +289,7 @@ TEST_CASE("makeStdString") {
     auto malformed = makeNSString(u"\xD800");
     
     {
+        CHECK(makeStdString<char16_t>((NSString *)nullptr) == u"");
         CHECK(makeStdString<char16_t>(@"abc") == u"abc");
         CHECK(makeStdString<char16_t>(@"abc", 1) == u"bc");
         CHECK(makeStdString<char16_t>(@"abc", 1, 1) == u"b");
@@ -290,6 +298,7 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<char16_t>(malformed) == u"\xD800");
     }
     {
+        CHECK(makeStdString<char>((NSString *)nullptr) == "");
         CHECK(makeStdString<char>(@"abc") == "abc");
         CHECK(makeStdString<char>(@"abc", 1) == "bc");
         CHECK(makeStdString<char>(@"abc", 1, 1) == "b");
@@ -298,6 +307,7 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<char>(malformed) == "");
     }
     {
+        CHECK(makeStdString<char8_t>((NSString *)nullptr) == u8"");
         CHECK(makeStdString<char8_t>(@"abc") == u8"abc");
         CHECK(makeStdString<char8_t>(@"abc", 1) == u8"bc");
         CHECK(makeStdString<char8_t>(@"abc", 1, 1) == u8"b");
@@ -306,6 +316,7 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<char8_t>(malformed) == u8"");
     }
     {
+        CHECK(makeStdString<char32_t>((NSString *)nullptr) == U"");
         CHECK(makeStdString<char32_t>(@"abc") == U"abc");
         CHECK(makeStdString<char32_t>(@"abc", 1) == U"bc");
         CHECK(makeStdString<char32_t>(@"abc", 1, 1) == U"b");
@@ -314,6 +325,7 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<char32_t>(malformed) == U"");
     }
     {
+        CHECK(makeStdString<wchar_t>((NSString *)nullptr) == L"");
         CHECK(makeStdString<wchar_t>(@"abc") == L"abc");
         CHECK(makeStdString<wchar_t>(@"abc", 1) == L"bc");
         CHECK(makeStdString<wchar_t>(@"abc", 1, 1) == L"b");

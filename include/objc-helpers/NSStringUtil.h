@@ -368,17 +368,33 @@ private:
     CFIndex _size = 0;
 };
 
+/**
+ Converts CFStringRef to `std::basic_string<Char>`
+ 
+ @tparam Char character type of the resulatant std::basic_string
+ @param str string to convert. If nullptr an empty string is returned
+ @param start start index. If less than 0 assumed to be 0. If greater than length of the string an empty string is returned.
+ @param length number of source characters to convert. If less than 0 or start + length exceeds the length of the string assumed "to the end of string".
+ 
+ Convertions to char16_t are exact and never fail. Conversions to other character types are transcodings and can fail if source string contains invalid UTF-16
+ sequences. In such cases an empty string is returned. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
 template<CharTypeConvertibleWithNSString Char>
 auto makeStdString(CFStringRef __nullable str, CFIndex start = 0, CFIndex length = -1) {
     using RetType = std::basic_string<Char>;
+    
     if (!str)
+        return RetType();
+    auto strLength = CFStringGetLength(str);
+    if (start >= strLength)
         return RetType();
     if (start < 0)
         start = 0;
-    if (length < 0) {
-        length = CFStringGetLength(str);
-        length -= std::min(length, start);
-    }
+    if (length < 0)
+        length = strLength - start;
+    else
+        length = std::min(length, strLength - start);
+
     if constexpr (std::is_same_v<Char, char16_t>) {
         RetType ret(size_t(length), '\0');
         CFStringGetCharacters(str, {start, length}, (UniChar *)ret.data());
@@ -397,6 +413,17 @@ auto makeStdString(CFStringRef __nullable str, CFIndex start = 0, CFIndex length
 
 #ifdef __OBJC__
 
+/**
+ Converts NSString to `std::basic_string<Char>`
+ 
+ @tparam Char character type of the resulatant std::basic_string
+ @param str string to convert. If nil an empty string is returned
+ @param location start index. If greater than length of the string an empty string is returned.
+ @param length number of source characters to convert. If start + length exceeds the length of the string assumed "to the end of string".
+ 
+ Convertions to char16_t are exact and never fail. Conversions to other character types are transcodings and can fail if source string contains invalid UTF-16
+ sequences. In such cases an empty string is returned. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
 template<CharTypeConvertibleWithNSString Char>
 inline auto makeStdString(NSString * __nullable str, NSUInteger location = 0, NSUInteger length = NSUInteger(-1)) {
     return makeStdString<Char>((__bridge CFStringRef)str, CFIndex(location), CFIndex(length));
@@ -404,18 +431,50 @@ inline auto makeStdString(NSString * __nullable str, NSUInteger location = 0, NS
 
 #endif
 
+/**
+ Converts a range denoted by a pair of  NSStringCharAccess::const_iterator to `std::basic_string<Char>`
+ 
+ @tparam Char character type of the resulatant std::basic_string
+ 
+ If iterators do not form a valid substring of some NSString the behavior is undefined. If first and alst are both uninitialized iterators the result is an empty string.
+ 
+ Convertions to char16_t are exact and never fail. Conversions to other character types are transcodings and can fail if source string contains invalid UTF-16
+ sequences. In such cases an empty string is returned. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
 template<CharTypeConvertibleWithNSString Char>
 inline auto makeStdString(NSStringCharAccess::const_iterator first, NSStringCharAccess::const_iterator last) {
     return makeStdString<Char>(first.getCFString(), first.index(), last.index() - first.index());
 }
 
-
+/**
+ Converts NSStringCharAccess or a view derived from it to `std::basic_string<Char>`
+ 
+ @tparam Char character type of the resulatant std::basic_string
+ 
+ A dervied view must produce the original view iterators. Thus, for example, `std::views::take(N) would work while
+ `std::views::reverse` will not (and won't compile) since the latter's iterators are not the same as NSStringCharAccess ones.
+ 
+ If iterators do not form a valid substring of some NSString the behavior is undefined. If first and alst are both uninitialized iterators the result is an empty string.
+ 
+ Convertions to char16_t are exact and never fail. Conversions to other character types are transcodings and can fail if source string contains invalid UTF-16
+ sequences. In such cases an empty string is returned. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
 template<CharTypeConvertibleWithNSString Char, std::ranges::common_range Range>
 requires(std::is_same_v<std::ranges::iterator_t<std::remove_cvref_t<Range>>, NSStringCharAccess::const_iterator>)
 inline auto makeStdString(Range && range) {
     return makeStdString<Char>(std::ranges::begin(range), std::ranges::end(range));
 }
 
+/**
+ Converts any contiguous range of characters to CFString
+ 
+ @returns nullptr on failure
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ Convertions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
 template<std::ranges::contiguous_range CharRange>
 requires(CharTypeConvertibleWithNSString<std::ranges::range_value_t<CharRange>>)
 inline auto makeCFString(const CharRange & range)  -> CFStringRef __nullable {
@@ -430,6 +489,16 @@ inline auto makeCFString(const CharRange & range)  -> CFStringRef __nullable {
     }
 }
 
+/**
+ Converts a null terminated character string to CFString
+ 
+ @returns nullptr on failure
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ Convertions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
 template<CharTypeConvertibleWithNSString Char>
 inline auto makeCFString(const Char * __nullable str) -> CFStringRef __nullable {
     if (!str)
@@ -437,6 +506,16 @@ inline auto makeCFString(const Char * __nullable str) -> CFStringRef __nullable 
     return makeCFString(std::basic_string_view<Char>(str));
 }
 
+/**
+ Converts an initializer list of characters to CFString
+ 
+ @returns nullptr on failure
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ Convertions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
 template<CharTypeConvertibleWithNSString Char>
 inline auto makeCFString(const std::initializer_list<Char> & str) {
     return makeCFString(std::basic_string_view<Char>(str.begin(), str.size()));
@@ -445,17 +524,47 @@ inline auto makeCFString(const std::initializer_list<Char> & str) {
 
 #ifdef __OBJC__
 
+/**
+ Converts any contiguous range of characters to NSString
+ 
+ @returns nil on failure
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ Convertions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
 template<std::ranges::contiguous_range CharRange>
 requires(CharTypeConvertibleWithNSString<std::ranges::range_value_t<CharRange>>)
 inline auto makeNSString(const CharRange & range) {
     return (__bridge_transfer NSString *)makeCFString(range);
 }
 
+/**
+ Converts a null terminated character string to NSString
+ 
+ @returns nil on failure
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ Convertions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
 template<CharTypeConvertibleWithNSString Char>
 inline auto makeNSString(const Char * __nullable str) {
     return (__bridge_transfer NSString *)makeCFString(str);
 }
 
+/**
+ Converts an initializer list of characters to NSString
+ 
+ @returns nil on failure
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ Convertions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
 template<CharTypeConvertibleWithNSString Char>
 inline auto makeNSString(const std::initializer_list<Char> & str) {
     return (__bridge_transfer NSString *)makeCFString(str);
