@@ -186,9 +186,9 @@ inline namespace CO_DISPATCH_NS {
         /**
          We need a way to transfer return values from coroutines to clients.
          This is a generic "holder of value" that can handle anything that can be returned by a function.
-         It can, potentialy also store an exception depending on E template parameter.
+         It can, potentially also store an exception depending on E template parameter.
          If the stored type is not `void` it also has a "not set" state used by generators to distinguish
-         yield from return and corotines to trap potential logic errors in our code.
+         yield from return and coroutines to trap potential logic errors in our code.
          */
         template<class T, SupportsExceptions E>
         class ValueCarrier {
@@ -339,7 +339,7 @@ inline namespace CO_DISPATCH_NS {
          machine that tracks client and server behavior to avoid locking.
         
          @tparam Derived the derived class for CRTP
-         @tparam DelayedValue type of ValueCarrier to store asynchrnous result
+         @tparam DelayedValue type of ValueCarrier to store asynchronous result
          */
         template<class Derived, class DelayedValue>
         class BasicPromise {
@@ -507,7 +507,7 @@ inline namespace CO_DISPATCH_NS {
         private:
             //This little trick allows us to detect if current queue is the same as the argument
             //Since Apple doesn't allow us to ask "what is the current queue" this appears to be
-            //the only way to optmize unnecessary dispatches.
+            //the only way to optimize unnecessary dispatches.
             //Setting the key is probably not cheap but likely much cheaper than suspending and
             //scheduling dispatch when none is needed.
             auto isCurrentQueue(dispatch_queue_t __nonnull queue) const {
@@ -599,7 +599,7 @@ inline namespace CO_DISPATCH_NS {
                     std::atomic_thread_fence(std::memory_order_acquire);
                     //remember, refcounting is for server (Promise) only!
                     //it is safe to cast in this case because the object is non const to begin with
-                    //and destruction is outside of constness purview
+                    //and destruction is outside of const-ness purview
                     auto h = const_cast<State *>(this)->serverComplete();
                     h.resume();
                 }
@@ -652,7 +652,7 @@ inline namespace CO_DISPATCH_NS {
             {}
             
             //These methods need to be const because promise captured in blocks will be const.
-            //Which means m_sharedState needs ot be mutable. Sigh.
+            //Which means m_sharedState needs to be mutable. Sigh.
             
             template<class... Args>
             requires(DelayedValue::template IsEmplaceableFrom<Args...>)
@@ -776,7 +776,7 @@ inline namespace CO_DISPATCH_NS {
     /**
      @function
      Converts a call with an asynchronous callback to an awaitable call
-     @param func a callable you suppliy that will eventually cause the promise passed to it to be fullfilled in some callback
+     @param func a callable you supply that will eventually cause the promise passed to it to be fulfilled in some callback
      */
     template<class Ret, SupportsExceptions E, class Func>
     requires(std::is_invocable_r_v<void, Func, typename DispatchAwaitable<Ret, E>::Promise>)
@@ -790,7 +790,7 @@ inline namespace CO_DISPATCH_NS {
      
      This overload uses default value for SupportsExceptions setting. If exceptions are enabled in compilation it supports them
      otherwise no.
-     @param func a callable you suppliy that will eventually cause the promise passed to it to be fullfilled in some callback
+     @param func a callable you supply that will eventually cause the promise passed to it to be fulfilled in some callback
      */
     template<class Ret, class Func>
     requires(std::is_invocable_r_v<void, Func, typename DispatchAwaitable<Ret, CO_DISPATCH_DEFAULT_SE>::Promise>)
@@ -1068,7 +1068,7 @@ inline namespace CO_DISPATCH_NS {
      @function
      `co_await`ing this will resume the coroutine on a given queue optionally on or after a given time
      
-     If you pass your qurrent queue and non default `when` this is equivalent to an asyncrounous sleep
+     If you pass your current queue and non default `when` this is equivalent to an asynchronous sleep
      until `when` - now.
      */
     inline auto resumeOn(dispatch_queue_t __nonnull queue, dispatch_time_t when = DISPATCH_TIME_NOW) noexcept {
@@ -1100,7 +1100,7 @@ inline namespace CO_DISPATCH_NS {
      @function
      `co_await`ing this will resume a coroutine on the main queue optionally on or after a given time
      
-     If you are already on the main queue and pass non default  `when` this is equivalent to an asyncrounous sleep
+     If you are already on the main queue and pass non default  `when` this is equivalent to an asynchronous sleep
      until `when` - now.
      */
     inline auto resumeOnMainQueue(dispatch_time_t when = DISPATCH_TIME_NOW) noexcept {
@@ -1143,7 +1143,7 @@ inline namespace CO_DISPATCH_NS {
      Coroutine version of `dispatch_io_read`
      
      Unlike `dispatch_io_read` the progressHandler parameter is optional and is only needed if you
-     want to minitor the operation progress. The final result is returned as coroutine result.
+     want to monitor the operation progress. The final result is returned as coroutine result.
      @return DispatchIOResult object with operation result
      */
     inline auto co_dispatch_io_read(dispatch_io_t __nonnull channel, off_t offset, size_t length, dispatch_queue_t __nonnull queue, dispatch_io_handler_t __nullable progressHandler = nullptr) {
@@ -1176,7 +1176,7 @@ inline namespace CO_DISPATCH_NS {
      Coroutine version of `dispatch_io_write`
      
      Unlike `dispatch_io_write` the progressHandler parameter is optional and is only needed if you
-     want to minitor the operation progress. The final result is returned as coroutine result.
+     want to monitor the operation progress. The final result is returned as coroutine result.
      
      @return DispatchIOResult object with operation result
      */

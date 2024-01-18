@@ -1,3 +1,20 @@
 {
-    "C_Cpp.autoAddFileAssociations": false
+    "C_Cpp.autoAddFileAssociations": false,
+    "C_Cpp.default.cppStandard": "gnu++20",
+    "C_Cpp.default.intelliSenseMode": "macos-clang-x86",
+    "spellright.language": [
+        "en"
+    ],
+    "spellright.documentTypes": [
+        "markdown",
+        "latex",
+        "plaintext",
+        "cpp",
+        "objective-cpp"
+    ],
+    "spellright.parserByClass": {
+        "objective-cpp": {
+            "parser": "code"
+        }
+    },
 }

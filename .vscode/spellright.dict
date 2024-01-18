@@ -3,3 +3,5 @@ awaitables
 Promisify
 callables
 wrappable
+transcodings
+awaiter

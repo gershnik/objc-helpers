@@ -13,6 +13,8 @@
     #error This header requires C++20 mode or above with concepts support
 #endif
 
+#ifdef __OBJC__
+
 #import <XCTest/XCTest.h>
 
 #include <sstream>
@@ -101,6 +103,8 @@ namespace TestUtil {
 #define XCTAssertCppLessThanOrEqual(expression1, expression2, ...) \
     XCTPrimitiveAssertCpp(nil, >, _XCTAssertion_LessThanOrEqual, expression1, @#expression1, expression2, @#expression2, __VA_ARGS__)
 
+
+#endif //__OBJC__
 
 #endif
 

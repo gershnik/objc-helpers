@@ -46,7 +46,7 @@
    expensive to copy - oh well...
  * Because of the above you cannot have move-only thinks in your block. Forget about using `std::unique_ptr` for example.
 
- Theis  header gives you an ability to solve all of these problems.
+ This  header gives you an ability to solve all of these problems.
 
  It provides two functions: `makeBlock` and `makeMutableBlock` that take any C++ callable as an input and return an object
  that is implicitly convertible to a block and can be passed to any block-taking API. They (or rather the object they return)
@@ -132,7 +132,7 @@ namespace BlockUtil
          * Usually you don't want to create instances of this class directly. Instead use `makeBlock` and
          * `makeMutableBlock` factory functions that will do all the necessary deductions and checks for you.
          *
-         * This class is NOT the same as block pointer like void (^)(). It IS a bloack and is more akin to an std::function
+         * This class is NOT the same as block pointer like void (^)(). It IS a block and is more akin to an std::function
          * (only without any dynamic memory allocations). It can be copied by value, stored etc. and,
          * when needed, **converted to a block pointer**
          *
