@@ -34,7 +34,7 @@
 @end
 
 /**
- Signifies that NSObject conforming to it can be comapred to others of the same type
+ Signifies that NSObject conforming to it can be compared to others of the same type
  */
 @protocol BoxedComparable<NSObject>
 - (NSComparisonResult) compare:(id<BoxedComparable> __nonnull)other;
