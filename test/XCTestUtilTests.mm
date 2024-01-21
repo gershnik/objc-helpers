@@ -173,7 +173,7 @@ namespace {
 TEST_CASE( "Generic" ) {
     failures.clear();
     XCTAssertCppEqual(bar{1}, bar{2});
-    CHECK_FAILURE(__LINE__ - 1, true, "((bar{1}) equal to (bar{2})) failed: (\"(anonymous namespace)::bar {\n  int i = 1\n}\n\") is not equal to (\"(anonymous namespace)::bar {\n  int i = 2\n}\n\")", "");
+    CHECK_FAILURE(__LINE__ - 1, true, "((bar{1}) equal to (bar{2})) failed: (\"(anonymous namespace)::bar object\") is not equal to (\"(anonymous namespace)::bar object\")", "");
 }
 
 namespace {

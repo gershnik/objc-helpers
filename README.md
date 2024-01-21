@@ -349,7 +349,7 @@ That, in the case of failure, try to obtain description using the following meth
 - If there is an ADL call `testDescription(obj)` that produces `NSString *`, use that.
 - Otherwise, if there is an ADL call `to_string(obj)` in `using std::to_string` scope, use that
 - Otherwise, if it is possible to do `ostream << obj`, use that
-- Finally produce use the output of [`__builtin_dump_struct`](https://clang.llvm.org/docs/LanguageExtensions.html#builtin-dump-struct) clang intrinsic.
+- Finally produce `"<full name of the type> object"` string.
 
 Thus if an object is printable using the typical means those will be automatically used. You can also make your own objects printable using either of the means above. The `testDescription` approach specifically exists to allow you to print something different for tests than in normal code.
 

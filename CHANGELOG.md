@@ -5,9 +5,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
-### Changed
-- `XCTestUtil.h`: default output for printing C++ objects changed to use [`__builtin_dump_struct`](https://clang.llvm.org/docs/LanguageExtensions.html#builtin-dump-struct) clang intrinsic.
-
 ## [3.0] - 2024-01-17
 
 ### Changed
