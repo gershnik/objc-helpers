@@ -17,6 +17,8 @@
 #include <type_traits>
 #include <cstdlib>
 #include <cassert>
+#include <cstddef>
+#include <utility>
 
 #include <Block.h>
 
@@ -531,36 +533,40 @@ namespace BlockUtil
         auto makeMutableBlock(Callable && callable) {
             return makeBlockHelper<true>(std::forward<Callable>(callable), (CallType *) nullptr);
         }
-        
-        /**
-         Convert strong pointer to a weak pointer of the same type
-         
-         Usage:
-         @code
-         [foo doBar:BlockWrapper([weakSelf = makeWeak(self)] () {
-            
-         }];
-         @endcode
-         */
-        template<class T>
-        auto makeWeak(T * __strong obj) -> T * __weak
-            { return obj; }
 
-        /**
-         Convert weak pointer to a strong pointer of the same type
-         
-         Usage:
-         @code
-         [foo doBar:BlockWrapper([weakSelf = makeWeak(self)] () {
-            auto self = makeStrong(self);
-            if (!self)
-                return;
-         }];
-         @endcode
-         */
-        template<class T>
-        auto makeStrong(T * __weak obj) -> T * __strong
-            { return obj; }
+        #if __has_feature(objc_arc)
+        
+            /**
+             Convert strong pointer to a weak pointer of the same type
+             
+             Usage:
+             @code
+             [foo doBar:BlockWrapper([weakSelf = makeWeak(self)] () {
+                
+             }];
+             @endcode
+            */
+            template<class T>
+            auto makeWeak(T * __strong obj) -> T * __weak
+                { return obj; }
+
+            /**
+             Convert weak pointer to a strong pointer of the same type
+             
+             Usage:
+             @code
+             [foo doBar:BlockWrapper([weakSelf = makeWeak(self)] () {
+                 auto self = makeStrong(self);
+                 if (!self)
+                     return;
+             }];
+            @endcode
+            */
+            template<class T>
+            auto makeStrong(T * __weak obj) -> T * __strong
+                { return obj; }
+
+        #endif
 
     }
 }
@@ -568,8 +574,10 @@ namespace BlockUtil
 using BlockUtil::BlockWithCallable;
 using BlockUtil::makeBlock;
 using BlockUtil::makeMutableBlock;
-using BlockUtil::makeWeak;
-using BlockUtil::makeStrong;
+#if __has_feature(objc_arc)
+    using BlockUtil::makeWeak;
+    using BlockUtil::makeStrong;
+#endif
 
 
 

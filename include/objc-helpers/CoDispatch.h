@@ -24,6 +24,7 @@
 #include <memory>
 #include <atomic>
 #include <cassert>
+#include <limits>
 
 #include <dispatch/dispatch.h>
 #ifndef __OBJC__
@@ -71,8 +72,8 @@ inline namespace CO_DISPATCH_NS {
          This is a very simple intrusive refcounting smart pointer to avoid pulling some external library in
          */
         
-        template<class T> struct Ref { T * __nullable ptr; };
-        template<class T> struct Noref { T * __nullable ptr; };
+        template<class T> struct Ref { T * _Nullable ptr; };
+        template<class T> struct Noref { T * _Nullable ptr; };
         
         template<class T>
         class [[clang::trivial_abi]] RefcntPtr {
@@ -107,23 +108,23 @@ inline namespace CO_DISPATCH_NS {
                 m_ptr = nullptr;
             }
             
-            auto operator->() const noexcept -> T * __nullable
+            auto operator->() const noexcept -> T * _Nullable
                 { return m_ptr; }
             auto operator*() const noexcept -> T &
                 { return *m_ptr; }
-            auto get() const noexcept -> T * __nullable
+            auto get() const noexcept -> T * _Nullable
                 { return m_ptr; }
             operator bool() const noexcept
                 { return m_ptr != nullptr; }
         private:
-            T * __nullable m_ptr;
+            T * _Nullable m_ptr;
         };
         
         template<class T>
-        auto ref(T * __nullable ptr) noexcept
+        auto ref(T * _Nullable ptr) noexcept
             { return RefcntPtr{Ref<T>{ptr}}; }
         template<class T>
-        auto noref(T * __nullable ptr) noexcept
+        auto noref(T * _Nullable ptr) noexcept
             { return RefcntPtr{Noref<T>{ptr}}; }
         
         //MARK: - Dispatch object holders
@@ -132,7 +133,7 @@ inline namespace CO_DISPATCH_NS {
         
 #if OS_OBJECT_USE_OBJC
         template<class D>
-        using DispatchHolder = D __nullable;
+        using DispatchHolder = D _Nullable;
         
 #else
         template<class D>
@@ -383,7 +384,7 @@ inline namespace CO_DISPATCH_NS {
             /**
              Resumes execution for generators or coroutines that start suspended
              */
-            auto resumeExecution(dispatch_queue_t __nullable queue) noexcept {
+            auto resumeExecution(dispatch_queue_t _Nullable queue) noexcept {
                 m_value.clear();
                 m_awaiterOnResumeQueue = false;
                 [[maybe_unused]] auto oldstate = m_state.exchange(s_runningMarker, std::memory_order_acq_rel);
@@ -467,7 +468,7 @@ inline namespace CO_DISPATCH_NS {
             /**
              Specify a queue on which resume client
              */
-            void setResumeQueue(dispatch_queue_t __nullable queue, dispatch_time_t when) noexcept {
+            void setResumeQueue(dispatch_queue_t _Nullable queue, dispatch_time_t when) noexcept {
                 m_resumeQueue = queue;
                 m_when = when;
             }
@@ -510,14 +511,14 @@ inline namespace CO_DISPATCH_NS {
             //the only way to optimize unnecessary dispatches.
             //Setting the key is probably not cheap but likely much cheaper than suspending and
             //scheduling dispatch when none is needed.
-            auto isCurrentQueue(dispatch_queue_t __nonnull queue) const {
+            auto isCurrentQueue(dispatch_queue_t _Nonnull queue) const {
                 dispatch_queue_set_specific(queue, this, const_cast<BasicPromise *>(this), nullptr);
                 bool ret = (dispatch_get_specific(this) == this);
                 dispatch_queue_set_specific(queue, this, nullptr, nullptr);
                 return ret;
             }
             
-            void resumeHandleAsync(void * __nonnull handleAddr) {
+            void resumeHandleAsync(void * _Nonnull handleAddr) {
                 
                 auto resumer = [](void * addr) {
                     std::coroutine_handle<>::from_address(addr).resume();
@@ -544,7 +545,7 @@ inline namespace CO_DISPATCH_NS {
         
         template<class Promise>
         struct PromiseClientAbandoner {
-            void operator()(Promise * __nonnull ptr) const noexcept
+            void operator()(Promise * _Nonnull ptr) const noexcept
                 { ptr->clientAbandon(); }
         };
         template<class Promise>
@@ -633,7 +634,7 @@ inline namespace CO_DISPATCH_NS {
 #ifndef __OBJC__
         template<class Ret>
         struct StateForFunc<Ret (^)()> : State {
-            StateForFunc(Ret (^ __nonnull block)()) noexcept:
+            StateForFunc(Ret (^ _Nonnull block)()) noexcept:
                 func(Block_copy(block))
             {}
             ~StateForFunc() noexcept
@@ -641,13 +642,13 @@ inline namespace CO_DISPATCH_NS {
             StateForFunc(StateForFunc &&) = delete;
             StateForFunc(const StateForFunc &) = delete;
             
-            Ret (^ __nonnull func)();
+            Ret (^ _Nonnull func)();
         };
 #endif
     public:
         class Promise {
         public:
-            Promise(State * __nonnull state):
+            Promise(State * _Nonnull state):
                 m_sharedState(noref(state))
             {}
             
@@ -687,7 +688,7 @@ inline namespace CO_DISPATCH_NS {
             return awaiter{std::move(m_sharedState)};
         }
         
-        auto resumeOn(dispatch_queue_t __nullable queue,
+        auto resumeOn(dispatch_queue_t _Nullable queue,
                       dispatch_time_t when = DISPATCH_TIME_NOW) && noexcept -> DispatchAwaitable && {
             m_sharedState->setResumeQueue(queue, when);
             return std::move(*this);
@@ -697,7 +698,7 @@ inline namespace CO_DISPATCH_NS {
         
         template<class Func>
         requires(std::is_invocable_v<FunctionFromReference<Func>>)
-        static auto invokeOnQueue(dispatch_queue_t __nonnull queue, Func && func) -> DispatchAwaitable {
+        static auto invokeOnQueue(dispatch_queue_t _Nonnull queue, Func && func) -> DispatchAwaitable {
             auto * state = new StateForFunc<FunctionFromReference<Func>>(std::forward<Func>(func));
             dispatch_async_f(queue, state, DispatchAwaitable::invokeFromState<Func>);
             return DispatchAwaitable(state);
@@ -722,13 +723,13 @@ inline namespace CO_DISPATCH_NS {
         }
         
     private:
-        DispatchAwaitable(State * __nonnull state) noexcept :
+        DispatchAwaitable(State * _Nonnull state) noexcept :
             m_sharedState(state)
         {}
         
         template<class Func>
         requires(std::is_invocable_v<FunctionFromReference<Func>>)
-        static void invokeFromState(void * __nonnull ptr) noexcept {
+        static void invokeFromState(void * _Nonnull ptr) noexcept {
             auto * state = static_cast<StateForFunc<FunctionFromReference<Func>> *>(ptr);
             Promise promise(state);
 #ifdef __cpp_exceptions
@@ -805,7 +806,7 @@ inline namespace CO_DISPATCH_NS {
      */
     template<class Func>
     requires(std::is_invocable_v<Func>)
-    auto co_dispatch(dispatch_queue_t __nonnull queue, Func && func) {
+    auto co_dispatch(dispatch_queue_t _Nonnull queue, Func && func) {
         return DispatchAwaitableFor<Func>::invokeOnQueue(queue, std::forward<Func>(func));
     }
     
@@ -891,7 +892,7 @@ inline namespace CO_DISPATCH_NS {
         }
         
         
-        auto resumeOn(dispatch_queue_t __nullable queue, dispatch_time_t when = DISPATCH_TIME_NOW) && noexcept -> DispatchTask && {
+        auto resumeOn(dispatch_queue_t _Nullable queue, dispatch_time_t when = DISPATCH_TIME_NOW) && noexcept -> DispatchTask && {
             m_promise->setResumeQueue(queue, when);
             return std::move(*this);
         }
@@ -899,7 +900,7 @@ inline namespace CO_DISPATCH_NS {
             { return std::move(*this).resumeOn(dispatch_get_main_queue(), when); }
         
     private:
-        DispatchTask(Promise * __nonnull promise) noexcept :
+        DispatchTask(Promise * _Nonnull promise) noexcept :
             m_promise(promise)
         {}
         
@@ -995,13 +996,13 @@ inline namespace CO_DISPATCH_NS {
             };
             struct NextAwaitable {
                 Util::ClientAbandonPtr<Promise> promise;
-                Iterator * __nonnull it;
+                Iterator * _Nonnull it;
                 
                 void operator co_await() & = delete;
                 void operator co_await() const & = delete;
                 auto operator co_await() && noexcept  {
                     struct awaiter : AwaiterBase {
-                        Iterator * __nonnull it;
+                        Iterator * _Nonnull it;
                         void await_resume() noexcept(noexcept(it->m_promise->getValueToken())) {
                             it->m_promise = std::move(AwaiterBase::promise);
                             it->m_valueToken = it->m_promise->getValueToken();
@@ -1024,7 +1025,7 @@ inline namespace CO_DISPATCH_NS {
                 return m_valueToken;
             }
         private:
-            Iterator(Util::ClientAbandonPtr<Promise> && promise, dispatch_queue_t __nullable queue, DelayedValue::ValueToken valueToken):
+            Iterator(Util::ClientAbandonPtr<Promise> && promise, dispatch_queue_t _Nullable queue, DelayedValue::ValueToken valueToken):
                 m_promise(std::move(promise)),
                 m_queue(queue),
                 m_valueToken(valueToken)
@@ -1035,7 +1036,7 @@ inline namespace CO_DISPATCH_NS {
             DelayedValue::ValueToken m_valueToken;
         };
         
-        auto beginOn(dispatch_queue_t __nullable queue) && noexcept {
+        auto beginOn(dispatch_queue_t _Nullable queue) && noexcept {
             m_promise->resumeExecution(queue);
             return typename Iterator::FirstAwaitable{{std::move(m_promise)}, Util::QueueHolder{queue}};
         }
@@ -1046,7 +1047,7 @@ inline namespace CO_DISPATCH_NS {
         auto beginSync() && noexcept
             { return std::move(*this).beginOn(nullptr); }
         
-        auto resumingOn(dispatch_queue_t __nullable queue) && noexcept -> DispatchGenerator && {
+        auto resumingOn(dispatch_queue_t _Nullable queue) && noexcept -> DispatchGenerator && {
             m_promise->setResumeQueue(queue, DISPATCH_TIME_NOW);
             return std::move(*this);
         }
@@ -1054,7 +1055,7 @@ inline namespace CO_DISPATCH_NS {
             { return std::move(*this).resumingOn(dispatch_get_main_queue()); }
     
     private:
-        DispatchGenerator(Promise * __nonnull promise) noexcept :
+        DispatchGenerator(Promise * _Nonnull promise) noexcept :
             m_promise(promise)
         {}
         
@@ -1071,7 +1072,7 @@ inline namespace CO_DISPATCH_NS {
      If you pass your current queue and non default `when` this is equivalent to an asynchronous sleep
      until `when` - now.
      */
-    inline auto resumeOn(dispatch_queue_t __nonnull queue, dispatch_time_t when = DISPATCH_TIME_NOW) noexcept {
+    inline auto resumeOn(dispatch_queue_t _Nonnull queue, dispatch_time_t when = DISPATCH_TIME_NOW) noexcept {
         struct Awaitable
         {
             dispatch_queue_t queue;
@@ -1115,7 +1116,7 @@ inline namespace CO_DISPATCH_NS {
     struct DispatchIOResult {
         DispatchIOResult() noexcept = default;
         
-        DispatchIOResult(dispatch_data_t __nullable data, int error) noexcept:
+        DispatchIOResult(dispatch_data_t _Nullable data, int error) noexcept:
             m_data(data),
             m_error(error)
         {}
@@ -1126,7 +1127,7 @@ inline namespace CO_DISPATCH_NS {
          For reads this is the data read. For writes the data that could not be written.
          Can be nullptr
          */
-        auto data() const noexcept -> dispatch_data_t __nullable
+        auto data() const noexcept -> dispatch_data_t _Nullable
             { return m_data; }
         /**
          This value is 0 if the data was read/written successfully. If an error occurred, it contains the error number.
@@ -1146,7 +1147,7 @@ inline namespace CO_DISPATCH_NS {
      want to monitor the operation progress. The final result is returned as coroutine result.
      @return DispatchIOResult object with operation result
      */
-    inline auto co_dispatch_io_read(dispatch_io_t __nonnull channel, off_t offset, size_t length, dispatch_queue_t __nonnull queue, dispatch_io_handler_t __nullable progressHandler = nullptr) {
+    inline auto co_dispatch_io_read(dispatch_io_t _Nonnull channel, off_t offset, size_t length, dispatch_queue_t _Nonnull queue, dispatch_io_handler_t _Nullable progressHandler = nullptr) {
         return makeAwaitable<DispatchIOResult, SupportsExceptions::No>([channel, offset, length, queue, progressHandler](auto promise) {
             dispatch_io_read(channel, offset, length, queue, ^ (bool done, dispatch_data_t data, int error){
                 if (progressHandler)
@@ -1163,7 +1164,7 @@ inline namespace CO_DISPATCH_NS {
      
      @return DispatchIOResult object with operation result
      */
-    inline auto co_dispatch_read(dispatch_fd_t fd, size_t length, dispatch_queue_t __nonnull queue) {
+    inline auto co_dispatch_read(dispatch_fd_t fd, size_t length, dispatch_queue_t _Nonnull queue) {
         return makeAwaitable<DispatchIOResult, SupportsExceptions::No>([fd, length, queue](auto promise) {
             dispatch_read(fd, length, queue, ^ (dispatch_data_t data, int error) {
                 promise.success(data, error);
@@ -1180,7 +1181,7 @@ inline namespace CO_DISPATCH_NS {
      
      @return DispatchIOResult object with operation result
      */
-    inline auto co_dispatch_io_write(dispatch_io_t __nonnull channel, off_t offset, dispatch_data_t __nonnull data, dispatch_queue_t __nonnull queue, dispatch_io_handler_t __nullable progressHandler = nullptr) {
+    inline auto co_dispatch_io_write(dispatch_io_t _Nonnull channel, off_t offset, dispatch_data_t _Nonnull data, dispatch_queue_t _Nonnull queue, dispatch_io_handler_t _Nullable progressHandler = nullptr) {
         return makeAwaitable<DispatchIOResult, SupportsExceptions::No>([channel, offset, data, queue, progressHandler](auto promise) {
             dispatch_io_write(channel, offset, data, queue, ^ (bool done, dispatch_data_t dataRemaining, int error){
                 if (progressHandler)
@@ -1197,7 +1198,7 @@ inline namespace CO_DISPATCH_NS {
      
      @return DispatchIOResult object with operation result
      */
-    inline auto co_dispatch_write(dispatch_fd_t fd, dispatch_data_t __nonnull data, dispatch_queue_t __nonnull queue) {
+    inline auto co_dispatch_write(dispatch_fd_t fd, dispatch_data_t _Nonnull data, dispatch_queue_t _Nonnull queue) {
         return makeAwaitable<DispatchIOResult, SupportsExceptions::No>([fd, data, queue](auto promise) {
             dispatch_write(fd, data, queue, ^ (dispatch_data_t dataRemaining, int error) {
                 promise.success(dataRemaining, error);
