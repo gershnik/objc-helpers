@@ -19,7 +19,7 @@ build/CoDispatchTestsCpp.o: CoDispatchTestsCpp.cpp ../include/objc-helpers/CoDis
 	$(CLANG) $(CPPFLAGS) -c -o $@  $<
 
 build/CoDispatchTestsNoexcept.o: CoDispatchTestsNoexcept.cpp ../include/objc-helpers/CoDispatch.h build
-	$(CLANG) $(CPPFLAGS) -c -o $@  $<
+	$(CLANG) $(CPPFLAGS) -fno-exceptions -c -o $@  $<
 
 build/test: build/main-linux.o \
 			build/BlockUtilTestCpp.o \
