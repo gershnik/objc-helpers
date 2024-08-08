@@ -1,7 +1,7 @@
 
 CLANG ?= clang++
 SOURCES:=BlockUtilTestCpp.cpp CoDispatchTestsCpp.cpp main-linux.cpp
-CPPFLAGS:=--std=c++20 -fblocks -I../include
+CPPFLAGS:=--std=c++20 -fblocks -I../include -O2 -DNDEBUG
 LDFLAGS:=--std=c++20 -fblocks -ldispatch -lBlocksRuntime
 
 .DEFAULT_GOAL:=build/test
