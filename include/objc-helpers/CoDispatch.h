@@ -25,6 +25,7 @@
 #include <atomic>
 #include <cassert>
 #include <limits>
+#include <utility>
 
 #include <dispatch/dispatch.h>
 #ifndef __OBJC__
