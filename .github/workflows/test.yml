@@ -24,7 +24,7 @@ jobs:
     
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Build tests
       shell: bash
@@ -33,3 +33,42 @@ jobs:
     - name: Run tests
       shell: bash
       run: DerivedData/Build/Products/Release/test
+
+  linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Prepare
+      shell: bash
+      run: |
+        echo "::group::Update System"
+        sudo apt-get install -y ninja-build
+        echo "::endgroup::"
+        
+        echo "::group::Clang"
+        wget https://apt.llvm.org/llvm.sh
+        chmod u+x llvm.sh
+        sudo ./llvm.sh 16
+        echo "::endgroup::"
+        
+        echo "::group::libdispatch"
+        git clone --depth=1 https://github.com/apple/swift-corelibs-libdispatch.git
+        cd swift-corelibs-libdispatch
+        cmake -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -S . -B build
+        cmake --build build
+        sudo cmake --install build --prefix=/usr
+        echo "::endgroup::"
+
+
+    - name: Build tests
+      shell: bash
+      run: |
+        cd test
+        CLANG=clang++-16 make
+
+    - name: Run tests
+      shell: bash
+      run: test/build/test
