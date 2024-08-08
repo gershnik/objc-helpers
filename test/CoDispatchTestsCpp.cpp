@@ -2,21 +2,31 @@
 
 #include "doctest.h"
 
-#include <CoreFoundation/CoreFoundation.h>
+#if (defined(__APPLE__) && defined(__MACH__))
 #include <mach-o/dyld.h>
+#endif
 
 #include <filesystem>
+#include <vector>
 
 static auto checkIO() -> DispatchTask<> {
     
-    auto conq = dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0);
+    auto conq = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0);
     
     co_await resumeOn(conq);
     
+#if (defined(__APPLE__) && defined(__MACH__))
     char buf[1024];
     uint32_t size = sizeof(buf);
     REQUIRE(_NSGetExecutablePath(buf, &size) == 0);
     std::filesystem::path path(buf);
+#else
+    std::filesystem::path selfLink = "/proc/" + std::to_string(getpid()) + "/exe";
+    std::error_code ec;
+    std::filesystem::path path = read_symlink(selfLink, ec);
+    REQUIRE(!ec);
+#endif
+    
     path = path.parent_path() / "test.txt";
     
     dispatch_data_t hello = dispatch_data_create("hello", 5, conq,  DISPATCH_DATA_DESTRUCTOR_DEFAULT);
@@ -99,9 +109,9 @@ static auto checkIO() -> DispatchTask<> {
     co_await resumeOnMainQueue();
 }
 
-static DispatchTask<> runTests(bool & shouldKeepRunning) {
+static DispatchTask<> runTests() {
     
-    auto conq = dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0);
+    auto conq = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0);
     
     int i = co_await co_dispatch([&]() {
         return 7;
@@ -139,20 +149,9 @@ static DispatchTask<> runTests(bool & shouldKeepRunning) {
     }
     
     co_await checkIO();
-    
-    shouldKeepRunning = false;
-    
 }
 
 TEST_CASE("CoDispatchTestsCpp") {
-    
-    bool shouldKeepRunning = true;
-    
-    runTests(shouldKeepRunning);
-    
-    while (shouldKeepRunning) {
-        CFRunLoopRunInMode(kCFRunLoopDefaultMode, std::numeric_limits<CFTimeInterval>::max(), true);
-    }
-    
+    runTests();
 }
 

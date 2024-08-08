@@ -698,27 +698,14 @@ static auto checkIO() -> DispatchTask<> {
     co_await resumeOnMainQueue();
 }
 
-static DispatchTask<> runTests(bool & shouldKeepRunning) {
-    
-    co_await checkReturnPropagation();
-    co_await checkDispatchToDifferentQueue();
-    co_await checkMakeAwaitable();
-    co_await checkTasks();
-    co_await checkGenerator();
-    co_await checkIO();
-    
-    shouldKeepRunning = false;
-}
-
-
 TEST_CASE("CoDispatchTests") {
-    
-    bool shouldKeepRunning = true;
-    
-    runTests(shouldKeepRunning);
-    
-    NSRunLoop * theRL = [NSRunLoop currentRunLoop];
-    while (shouldKeepRunning && [theRL runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]);
-    
+    []() -> DispatchTask<> {
+        co_await checkReturnPropagation();
+        co_await checkDispatchToDifferentQueue();
+        co_await checkMakeAwaitable();
+        co_await checkTasks();
+        co_await checkGenerator();
+        co_await checkIO();
+    }();
 }
 

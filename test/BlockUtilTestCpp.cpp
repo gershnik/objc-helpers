@@ -2,6 +2,8 @@
 
 #include "doctest.h"
 
+#include <string>
+
 TEST_SUITE_BEGIN( "BlockUtilTestsCpp" );
 
 namespace {
