@@ -29,6 +29,7 @@
 		441779372B24C4930036AF9F /* NSNumberUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 441779362B24C4930036AF9F /* NSNumberUtilTests.mm */; };
 		441779392B24C6B00036AF9F /* NSObjectUtilTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 441779382B24C6B00036AF9F /* NSObjectUtilTests.mm */; };
 		4417793B2B26FEA70036AF9F /* CoDispatchTestsNoexcept.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4417793A2B26FEA60036AF9F /* CoDispatchTestsNoexcept.cpp */; settings = {COMPILER_FLAGS = "-fno-exceptions"; }; };
+		4481ACCA2C65B3B6009521DB /* TestGlobal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4481ACC92C65B3B1009521DB /* TestGlobal.cpp */; };
 		448D57292B4E88A200A135E9 /* BlockUtilTestCpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 448D57282B4E88A200A135E9 /* BlockUtilTestCpp.cpp */; };
 		448D572B2B50D28500A135E9 /* BlockUtilTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 448D572A2B50D28500A135E9 /* BlockUtilTest.mm */; };
 		448D572E2B583C8400A135E9 /* NSStringUtilTestsCpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 448D572D2B583C8300A135E9 /* NSStringUtilTestsCpp.cpp */; };
@@ -74,6 +75,8 @@
 		441779362B24C4930036AF9F /* NSNumberUtilTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NSNumberUtilTests.mm; sourceTree = "<group>"; };
 		441779382B24C6B00036AF9F /* NSObjectUtilTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NSObjectUtilTests.mm; sourceTree = "<group>"; };
 		4417793A2B26FEA60036AF9F /* CoDispatchTestsNoexcept.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = CoDispatchTestsNoexcept.cpp; sourceTree = "<group>"; };
+		4481ACC82C65B35F009521DB /* TestGlobal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestGlobal.h; sourceTree = "<group>"; };
+		4481ACC92C65B3B1009521DB /* TestGlobal.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TestGlobal.cpp; sourceTree = "<group>"; };
 		448D57282B4E88A200A135E9 /* BlockUtilTestCpp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BlockUtilTestCpp.cpp; sourceTree = "<group>"; };
 		448D572A2B50D28500A135E9 /* BlockUtilTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BlockUtilTest.mm; sourceTree = "<group>"; };
 		448D572D2B583C8300A135E9 /* NSStringUtilTestsCpp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NSStringUtilTestsCpp.cpp; sourceTree = "<group>"; };
@@ -102,6 +105,8 @@
 				441779212B202F3E0036AF9F /* Library */,
 				4417791C2B2013E00036AF9F /* doctest.h */,
 				441779152B20136E0036AF9F /* main.mm */,
+				4481ACC82C65B35F009521DB /* TestGlobal.h */,
+				4481ACC92C65B3B1009521DB /* TestGlobal.cpp */,
 				448D57282B4E88A200A135E9 /* BlockUtilTestCpp.cpp */,
 				448D572A2B50D28500A135E9 /* BlockUtilTest.mm */,
 				44B947E62B477A2700B68C7E /* BoxUtilTests.mm */,
@@ -231,6 +236,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4481ACCA2C65B3B6009521DB /* TestGlobal.cpp in Sources */,
 				441779202B202DA30036AF9F /* CoDispatchTests.mm in Sources */,
 				441779162B20136E0036AF9F /* main.mm in Sources */,
 				441779372B24C4930036AF9F /* NSNumberUtilTests.mm in Sources */,

@@ -9,6 +9,8 @@
 #include <filesystem>
 #include <vector>
 
+#include "TestGlobal.h"
+
 static auto checkIO() -> DispatchTask<> {
     
     auto conq = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0);
@@ -149,9 +151,14 @@ static DispatchTask<> runTests() {
     }
     
     co_await checkIO();
+    endAsync();
 }
 
 TEST_CASE("CoDispatchTestsCpp") {
-    runTests();
+    startAsync();
+    dispatch_async(dispatch_get_main_queue(), ^ {
+        runTests();
+    });
+    waitForNoAsync();
 }
 

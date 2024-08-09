@@ -9,19 +9,31 @@ LDFLAGS:=--std=c++20 -fblocks -ldispatch -lBlocksRuntime
 build:
 	mkdir $@
 
-build/main-linux.o: main-linux.cpp ../include/objc-helpers/BlockUtil.h build
+build/main-linux.o: main-linux.cpp ../include/objc-helpers/BlockUtil.h doctest.h build
 	$(CLANG) $(CPPFLAGS) -c -o $@  $<
 
-build/BlockUtilTestCpp.o: BlockUtilTestCpp.cpp ../include/objc-helpers/BlockUtil.h build
+build/TestGlobal.o: TestGlobal.cpp TestGlobal.h build
 	$(CLANG) $(CPPFLAGS) -c -o $@  $<
 
-build/CoDispatchTestsCpp.o: CoDispatchTestsCpp.cpp ../include/objc-helpers/CoDispatch.h build
+build/BlockUtilTestCpp.o: BlockUtilTestCpp.cpp ../include/objc-helpers/BlockUtil.h doctest.h build
 	$(CLANG) $(CPPFLAGS) -c -o $@  $<
 
-build/CoDispatchTestsNoexcept.o: CoDispatchTestsNoexcept.cpp ../include/objc-helpers/CoDispatch.h build
+build/CoDispatchTestsCpp.o: CoDispatchTestsCpp.cpp \
+							../include/objc-helpers/CoDispatch.h \
+							TestGlobal.h \
+							doctest.h \
+							build
+	$(CLANG) $(CPPFLAGS) -c -o $@  $<
+
+build/CoDispatchTestsNoexcept.o: CoDispatchTestsNoexcept.cpp \
+							     ../include/objc-helpers/CoDispatch.h \
+								 TestGlobal.h \
+								 doctest.h \
+								 build
 	$(CLANG) $(CPPFLAGS) -fno-exceptions -c -o $@  $<
 
 build/test: build/main-linux.o \
+			build/TestGlobal.o \
 			build/BlockUtilTestCpp.o \
 			build/CoDispatchTestsCpp.o \
 			build/CoDispatchTestsNoexcept.o

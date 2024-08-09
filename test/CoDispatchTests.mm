@@ -11,6 +11,8 @@
 #include <filesystem>
 #include <chrono>
 
+#include "TestGlobal.h"
+
 using namespace std::literals;
 using namespace std::chrono;
 
@@ -336,41 +338,41 @@ static auto checkDispatchToDifferentQueue() -> DispatchTask<> {
         return 1;
     });
     CHECK(i == 1);
-    CHECK(!NSThread.isMainThread);
+    CHECK(!isMainQueue());
     
     i = co_await co_dispatch(conq, []() {
         [NSThread sleepForTimeInterval:0.2];
         return 2;
     }).resumeOnMainQueue();
     CHECK(i == 2);
-    CHECK(NSThread.isMainThread);
+    CHECK(isMainQueue());
     
     co_await resumeOn(conq);
-    CHECK(!NSThread.isMainThread);
+    CHECK(!isMainQueue());
     
     co_await resumeOnMainQueue();
-    CHECK(NSThread.isMainThread);
+    CHECK(isMainQueue());
     
     co_await resumeOn(conq);
-    CHECK(!NSThread.isMainThread);
+    CHECK(!isMainQueue());
     
     co_await resumeOnMainQueue(dispatch_time(DISPATCH_TIME_NOW, nanoseconds(200ms).count()));
-    CHECK(NSThread.isMainThread);
+    CHECK(isMainQueue());
     
     co_await resumeOn(conq, dispatch_time(DISPATCH_TIME_NOW, nanoseconds(200ms).count()));
-    CHECK(!NSThread.isMainThread);
+    CHECK(!isMainQueue());
     
     i = co_await delay(0.2, co_dispatch(dispatch_get_main_queue(), []() {
         return 3;
     }));
     CHECK(i == 3);
-    CHECK(!NSThread.isMainThread);
+    CHECK(!isMainQueue());
     
     i = co_await delay(0.2, co_dispatch(conq, []() {
         return 4;
     }).resumeOn(dispatch_get_main_queue()));
     CHECK(i == 4);
-    CHECK(NSThread.isMainThread);
+    CHECK(isMainQueue());
 }
 
 static auto checkMakeAwaitable() -> DispatchTask<> {
@@ -497,7 +499,7 @@ static auto checkTasks() -> DispatchTask<> {
     }
     
     co_await resumeOnMainQueue();
-    CHECK(NSThread.isMainThread);
+    CHECK(isMainQueue());
     
     
     auto coro = []() -> DispatchTask<int> {
@@ -508,13 +510,13 @@ static auto checkTasks() -> DispatchTask<> {
     };
     
     co_await coro().resumeOnMainQueue();
-    CHECK(NSThread.isMainThread);
+    CHECK(isMainQueue());
     
     co_await coro().resumeOnMainQueue(dispatch_time(DISPATCH_TIME_NOW, nanoseconds(200ms).count()));
-    CHECK(NSThread.isMainThread);
+    CHECK(isMainQueue());
     
     co_await delay(0.2, coro().resumeOnMainQueue(dispatch_time(DISPATCH_TIME_NOW, nanoseconds(1ms).count())));
-    CHECK(NSThread.isMainThread);
+    CHECK(isMainQueue());
 }
 
 static auto checkGenerator() -> DispatchTask<> {
@@ -531,7 +533,7 @@ static auto checkGenerator() -> DispatchTask<> {
         
         std::vector<int> res;
         for (auto it = co_await generate().resumingOnMainQueue().beginOn(conq); it; co_await it.next()) {
-            CHECK(NSThread.isMainThread);
+            CHECK(isMainQueue());
             res.push_back(*it);
         }
         CHECK(res == std::vector{1, 2, 3});
@@ -543,7 +545,7 @@ static auto checkGenerator() -> DispatchTask<> {
         };
         std::vector<int> res;
         for (auto it = co_await generate().begin(); it; co_await it.next()) {
-            CHECK(NSThread.isMainThread);
+            CHECK(isMainQueue());
             res.push_back(*it);
         }
         CHECK(res.empty());
@@ -699,13 +701,18 @@ static auto checkIO() -> DispatchTask<> {
 }
 
 TEST_CASE("CoDispatchTests") {
-    []() -> DispatchTask<> {
-        co_await checkReturnPropagation();
-        co_await checkDispatchToDifferentQueue();
-        co_await checkMakeAwaitable();
-        co_await checkTasks();
-        co_await checkGenerator();
-        co_await checkIO();
-    }();
+    startAsync();
+    dispatch_async(dispatch_get_main_queue(), ^ {
+        []() -> DispatchTask<> {
+            co_await checkReturnPropagation();
+            co_await checkDispatchToDifferentQueue();
+            co_await checkMakeAwaitable();
+            co_await checkTasks();
+            co_await checkGenerator();
+            co_await checkIO();
+            endAsync();
+        }();
+    });
+    waitForNoAsync();
 }
 
