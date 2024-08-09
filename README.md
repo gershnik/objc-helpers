@@ -358,7 +358,7 @@ Thus if an object is printable using the typical means those will be automatical
 ## Linux notes ##
 
 `BlockUtil.h` and `CoDispatch.h` headers can also be used on Linux. Currently this requires 
-* CLang 15 or above (for blocks support). See [this issue][gcc-blocks] for status of blocks support in GCC
+* CLang 16 or above (for blocks support). See [this issue][gcc-blocks] for status of blocks support in GCC
 * [swift-corelibs-libdispatch][libdispatch] library. Note that **most likely you need to build it from sources**. The versions available via various package managers (as of summer 2024) are very old and cannot be used.
 
 You must use:
