@@ -1,6 +1,6 @@
 # ObjC-Helpers #
 
-An ever-growing collection of utilities to make coding on Apple platforms in C++ or ObjectiveC++ more pleasant
+An ever-growing collection of utilities to make coding on Apple platforms in C++ or ObjectiveC++ more pleasant. Some functionality is also available on Linux.
 
 <!-- TOC depthfrom:2 -->
 
@@ -13,6 +13,7 @@ An ever-growing collection of utilities to make coding on Apple platforms in C++
     - [Accessing NSString/CFString as a char16_t container](#accessing-nsstringcfstring-as-a-char16_t-container)
     - [Conversions between NSString/CFString and char/char16_t/char32_t/char8_t/wchar_t ranges](#conversions-between-nsstringcfstring-and-charchar16_tchar32_tchar8_twchar_t-ranges)
     - [XCTest assertions for C++ objects](#xctest-assertions-for-c-objects)
+- [Linux notes](#linux-notes)
 
 <!-- /TOC -->
 
@@ -62,6 +63,7 @@ have the following features:
   by ObjectiveC runtime or `Block_copy` in plain C++.
 * It is possible to use move-only callables.
 * All of this is accomplished with NO dynamic memory allocation
+* This functionality is also available on Linux under CLang (see [Linux notes](#linux-notes) below).
   
 Some examples of their usage are as follows:
 
@@ -199,7 +201,7 @@ int main() {
 }
 ```
 
-This facility can also be used both from plain C++ (.cpp) and ObjectiveC++ (.mm) files.
+This facility can also be used both from plain C++ (.cpp) and ObjectiveC++ (.mm) files. It is also available on Linux using [libdispatch][libdispatch] library (see [Linux notes](#linux-notes) below).
 
 
 ### Boxing of any C++ objects in ObjectiveC ones ###
@@ -353,4 +355,30 @@ That, in the case of failure, try to obtain description using the following meth
 
 Thus if an object is printable using the typical means those will be automatically used. You can also make your own objects printable using either of the means above. The `testDescription` approach specifically exists to allow you to print something different for tests than in normal code.
 
+## Linux notes ##
 
+`BlockUtil.h` and `CoDispatch.h` headers can also be used on Linux. Currently this requires 
+* CLang 15 or above (for blocks support). See [this issue][gcc-blocks] for status of blocks support in GCC
+* [swift-corelibs-libdispatch][libdispatch] library. Note that **most likely you need to build it from sources**. The versions available via various package managers (as of summer 2024) are very old and cannot be used.
+
+You must use:
+```
+--std=c++20 -fblocks
+```
+flags to use these headers.
+
+For `CoDispatch.h` link with:
+```
+-ldispatch -lBlocksRuntime
+```
+
+For `BlockUtil.h` link with:
+```
+-lBlocksRuntime
+```
+
+
+<!-- References -->
+
+[libdispatch]: https://github.com/apple/swift-corelibs-libdispatch
+[gcc-blocks]: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78352
