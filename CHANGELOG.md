@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## [3.1] - 2024-08-08
+
 ### Added
 - `BlockUtil.h` and `CoDispatch.h` are now supported on Linux
 
@@ -71,3 +73,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 [2.2]: https://github.com/gershnik/objc-helpers/releases/v2.2
 [2.3]: https://github.com/gershnik/objc-helpers/releases/v2.3
 [3.0]: https://github.com/gershnik/objc-helpers/releases/v3.0
+[3.1]: https://github.com/gershnik/objc-helpers/releases/v3.1
