@@ -700,19 +700,19 @@ static auto checkIO() -> DispatchTask<> {
     co_await resumeOnMainQueue();
 }
 
+static DispatchTask<> runTests() {
+    co_await checkReturnPropagation();
+    co_await checkDispatchToDifferentQueue();
+    co_await checkMakeAwaitable();
+    co_await checkTasks();
+    co_await checkGenerator();
+    co_await checkIO();
+    finishAsyncTest();
+}
+
 TEST_CASE("CoDispatchTests") {
-    startAsync();
-    dispatch_async(dispatch_get_main_queue(), ^ {
-        []() -> DispatchTask<> {
-            co_await checkReturnPropagation();
-            co_await checkDispatchToDifferentQueue();
-            co_await checkMakeAwaitable();
-            co_await checkTasks();
-            co_await checkGenerator();
-            co_await checkIO();
-            endAsync();
-        }();
+    waitForAsyncTest(^ {
+        runTests();
     });
-    waitForNoAsync();
 }
 

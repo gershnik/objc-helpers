@@ -9,8 +9,8 @@ LDFLAGS:=--std=c++20 -fblocks -ldispatch -lBlocksRuntime
 build:
 	mkdir $@
 
-build/main-linux.o: main-linux.cpp ../include/objc-helpers/BlockUtil.h doctest.h build
-	$(CLANG) $(CPPFLAGS) -c -o $@  $<
+build/main.o: main.mm ../include/objc-helpers/BlockUtil.h doctest.h build
+	$(CLANG) $(CPPFLAGS) -c -o $@ --language 'c++' $<
 
 build/TestGlobal.o: TestGlobal.cpp TestGlobal.h build
 	$(CLANG) $(CPPFLAGS) -c -o $@  $<
@@ -32,7 +32,7 @@ build/CoDispatchTestsNoexcept.o: CoDispatchTestsNoexcept.cpp \
 								 build
 	$(CLANG) $(CPPFLAGS) -fno-exceptions -c -o $@  $<
 
-build/test: build/main-linux.o \
+build/test: build/main.o \
 			build/TestGlobal.o \
 			build/BlockUtilTestCpp.o \
 			build/CoDispatchTestsCpp.o \

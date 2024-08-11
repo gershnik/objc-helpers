@@ -151,14 +151,12 @@ static DispatchTask<> runTests() {
     }
     
     co_await checkIO();
-    endAsync();
+    finishAsyncTest();
 }
 
 TEST_CASE("CoDispatchTestsCpp") {
-    startAsync();
-    dispatch_async(dispatch_get_main_queue(), ^ {
+    waitForAsyncTest(^ {
         runTests();
     });
-    waitForNoAsync();
 }
 
