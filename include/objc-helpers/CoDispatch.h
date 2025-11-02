@@ -317,7 +317,7 @@ inline namespace CO_DISPATCH_NS {
             }
             
             template<class X=ValueCarrier>
-            static auto moveOutValue(X::ValueToken token) noexcept(IsNoExceptExtractable) -> T
+            static auto moveOutValue(typename X::ValueToken token) noexcept(IsNoExceptExtractable) -> T
             requires(!ValueCarrier::isVoid && std::is_same_v<X, ValueCarrier>) {
                 Holder & holder = *token;
                 if constexpr (std::is_reference_v<T>)
@@ -1035,7 +1035,7 @@ inline namespace CO_DISPATCH_NS {
         private:
             Util::ClientAbandonPtr<Promise> m_promise;
             Util::QueueHolder m_queue;
-            DelayedValue::ValueToken m_valueToken;
+            typename DelayedValue::ValueToken m_valueToken;
         };
         
         auto beginOn(dispatch_queue_t _Nullable queue) && noexcept {
