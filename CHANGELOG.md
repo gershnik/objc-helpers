@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+### Added
+- The library has been back-ported to work with Xcode 13 and 14. Previously Xcode 15 or higher was required.
+  Note that some functionality may be not present or limited on these older versions.
+
+### Fixed
+- Formatting `NSString *` via `std::format` and `fmt::format` now works again on latest Xcode/libc++ versions. 
+
 ## [3.1] - 2024-08-08
 
 ### Added
