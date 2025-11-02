@@ -47,7 +47,7 @@ TEST_CASE("makeCFString") {
         std::vector<char16_t> vec = {u'a', u'b', u'c'};
         CHECK(eq(hold(makeCFString(vec)), CFSTR("abc")));
         
-        auto span = std::span(vec.begin(), vec.end());
+        auto span = std::span(vec.data(), vec.size());
         CHECK(eq(hold(makeCFString(span)), CFSTR("abc")));
         
         auto malformed = hold(makeCFString(u"\xD800"));
@@ -69,7 +69,7 @@ TEST_CASE("makeCFString") {
         std::vector<char> vec = {'a', 'b', 'c'};
         CHECK(eq(hold(makeCFString(vec)), CFSTR("abc")));
         
-        auto span = std::span(vec.begin(), vec.end());
+        auto span = std::span(vec.data(), vec.size());
         CHECK(eq(hold(makeCFString(span)), CFSTR("abc")));
         
         CHECK(hold(makeCFString("\x80")) == nullptr);
@@ -89,7 +89,7 @@ TEST_CASE("makeCFString") {
         std::vector<char> vec = {u8'a', u8'b', u8'c'};
         CHECK(eq(hold(makeCFString(vec)), CFSTR("abc")));
         
-        auto span = std::span(vec.begin(), vec.end());
+        auto span = std::span(vec.data(), vec.size());
         CHECK(eq(hold(makeCFString(span)), CFSTR("abc")));
         
         CHECK(hold(makeCFString(u8"\x80")) == nullptr);
@@ -109,7 +109,7 @@ TEST_CASE("makeCFString") {
         std::vector<char8_t> vec = {u8'a', u8'b', u8'c'};
         CHECK(eq(hold(makeCFString(vec)), CFSTR("abc")));
         
-        auto span = std::span(vec.begin(), vec.end());
+        auto span = std::span(vec.data(), vec.size());
         CHECK(eq(hold(makeCFString(span)), CFSTR("abc")));
         
         CHECK(hold(makeCFString(u8"\x80")) == nullptr);
@@ -129,7 +129,7 @@ TEST_CASE("makeCFString") {
         std::vector<char8_t> vec = {U'a', U'b', U'c'};
         CHECK(eq(hold(makeCFString(vec)), CFSTR("abc")));
         
-        auto span = std::span(vec.begin(), vec.end());
+        auto span = std::span(vec.data(), vec.size());
         CHECK(eq(hold(makeCFString(span)), CFSTR("abc")));
         
         CHECK(hold(makeCFString({char32_t(0x110000)})) == nullptr);
@@ -149,7 +149,7 @@ TEST_CASE("makeCFString") {
         std::vector<char8_t> vec = {L'a', L'b', L'c'};
         CHECK(eq(hold(makeCFString(vec)), CFSTR("abc")));
         
-        auto span = std::span(vec.begin(), vec.end());
+        auto span = std::span(vec.data(), vec.size());
         CHECK(eq(hold(makeCFString(span)), CFSTR("abc")));
         
         CHECK(hold(makeCFString({wchar_t(0x110000)})) == nullptr);
@@ -160,7 +160,9 @@ TEST_CASE("makeCFString") {
 TEST_CASE("makeStdString") {
     
     NSStringCharAccess access(CFSTR("abc"));
+#if __cpp_lib_ranges >= 201911L
     using std::views::take;
+#endif
     
     auto malformed = hold(makeCFString(u"\xD800"));
     
@@ -173,7 +175,9 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<char16_t>(CFSTR("abc"), 1, 7) == u"bc");
         CHECK(makeStdString<char16_t>(CFSTR("abc"), 3, 5) == u"");
         CHECK(makeStdString<char16_t>(CFSTR("abc"), 1, 0) == u"");
+    #if __cpp_lib_ranges >= 201911L
         CHECK(makeStdString<char16_t>(NSStringCharAccess(CFSTR("abc")) | take(2)) == u"ab");
+    #endif
         CHECK(makeStdString<char16_t>(access.begin(), access.end()) == u"abc");
         CHECK(makeStdString<char16_t>(malformed) == u"\xD800");
     }
@@ -183,7 +187,9 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<char>(CFSTR("abc"), 1) == "bc");
         CHECK(makeStdString<char>(CFSTR("abc"), 1, 1) == "b");
         CHECK(makeStdString<char>(CFSTR("abc"), -1, 1) == "a");
+    #if __cpp_lib_ranges >= 201911L
         CHECK(makeStdString<char>(NSStringCharAccess(CFSTR("abc")) | take(2)) == "ab");
+    #endif
         CHECK(makeStdString<char>(access.begin(), access.end()) == "abc");
         CHECK(makeStdString<char>(malformed) == "");
     }
@@ -193,7 +199,9 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<char8_t>(CFSTR("abc"), 1) == u8"bc");
         CHECK(makeStdString<char8_t>(CFSTR("abc"), 1, 1) == u8"b");
         CHECK(makeStdString<char8_t>(CFSTR("abc"), -1, 1) == u8"a");
+    #if __cpp_lib_ranges >= 201911L
         CHECK(makeStdString<char8_t>(NSStringCharAccess(CFSTR("abc")) | take(2)) == u8"ab");
+    #endif
         CHECK(makeStdString<char8_t>(access.begin(), access.end()) == u8"abc");
         CHECK(makeStdString<char8_t>(malformed) == u8"");
     }
@@ -203,7 +211,9 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<char32_t>(CFSTR("abc"), 1) == U"bc");
         CHECK(makeStdString<char32_t>(CFSTR("abc"), 1, 1) == U"b");
         CHECK(makeStdString<char32_t>(CFSTR("abc"), -1, 1) == U"a");
+    #if __cpp_lib_ranges >= 201911L
         CHECK(makeStdString<char32_t>(NSStringCharAccess(CFSTR("abc")) | take(2)) == U"ab");
+    #endif
         CHECK(makeStdString<char32_t>(access.begin(), access.end()) == U"abc");
         CHECK(makeStdString<char32_t>(malformed) == U"");
     }
@@ -213,7 +223,9 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<wchar_t>(CFSTR("abc"), 1) == L"bc");
         CHECK(makeStdString<wchar_t>(CFSTR("abc"), 1, 1) == L"b");
         CHECK(makeStdString<wchar_t>(CFSTR("abc"), -1, 1) == L"a");
+    #if __cpp_lib_ranges >= 201911L
         CHECK(makeStdString<wchar_t>(NSStringCharAccess(CFSTR("abc")) | take(2)) == L"ab");
+    #endif
         CHECK(makeStdString<wchar_t>(access.begin(), access.end()) == L"abc");
         CHECK(makeStdString<wchar_t>(malformed) == L"");
     }

@@ -2,10 +2,15 @@
 
 #include "doctest.h"
 
+#include <vector>
+
 using namespace std::literals;
 
 #pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
 #pragma clang diagnostic ignored "-Wgnu-statement-expression-from-macro-expansion"
+#pragma clang diagnostic ignored "-Wgnu-statement-expression"
+#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 
 struct Failure {
     std::string filePath;
@@ -42,7 +47,6 @@ TEST_SUITE_BEGIN( "TestUtilTests" );
 
 
 TEST_CASE( "integer" ) {
-    
     //Equal
     failures.clear();
     XCTAssertCppEqual(1, 1);

@@ -1,3 +1,6 @@
+#include <version>
+#if __cpp_lib_coroutine
+
 #include <objc-helpers/CoDispatch.h>
 
 #include "doctest.h"
@@ -159,4 +162,6 @@ TEST_CASE("CoDispatchTestsCpp") {
         runTests();
     });
 }
+
+#endif
 

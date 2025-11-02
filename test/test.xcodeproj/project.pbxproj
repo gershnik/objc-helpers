@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 55;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
@@ -192,7 +192,7 @@
 				};
 			};
 			buildConfigurationList = 4417790D2B20136E0036AF9F /* Build configuration list for PBXProject "test" */;
-			compatibilityVersion = "Xcode 14.0";
+			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -393,6 +393,7 @@
 				GCC_WARN_UNUSED_LABEL = YES;
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(PLATFORM_DIR)/Developer/Library/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				OTHER_CFLAGS = (
 					"-fprofile-instr-generate",
 					"-fcoverage-mapping",
@@ -420,6 +421,7 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(PLATFORM_DIR)/Developer/Library/Frameworks";
 				LLVM_LTO = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				OTHER_CFLAGS = (
 					"-fprofile-instr-generate",
 					"-fcoverage-mapping",

@@ -26,6 +26,7 @@
 #include <cassert>
 #include <limits>
 #include <utility>
+#include <exception>
 
 #include <dispatch/dispatch.h>
 #ifndef __OBJC__
@@ -658,7 +659,7 @@ inline namespace CO_DISPATCH_NS {
             
             template<class... Args>
             requires(DelayedValue::template IsEmplaceableFrom<Args...>)
-            void success(Args && ...args) const noexcept(noexcept(m_sharedState->emplaceReturnValue(std::forward<Args>(args)...))) 
+            void success(Args && ...args) const noexcept(noexcept(m_sharedState->emplaceReturnValue(std::forward<Args>(args)...)))
                 { m_sharedState->emplaceReturnValue(std::forward<Args>(args)...); }
             
             template<class X=DelayedValue>
@@ -958,7 +959,7 @@ inline namespace CO_DISPATCH_NS {
                 return awaiter{*this};
             }
             
-            void return_void() noexcept 
+            void return_void() noexcept
             {}
             
             void destroy() const noexcept {
@@ -1141,7 +1142,7 @@ inline namespace CO_DISPATCH_NS {
     };
     
     /**
-     @function 
+     @function
      Coroutine version of `dispatch_io_read`
      
      Unlike `dispatch_io_read` the progressHandler parameter is optional and is only needed if you
@@ -1160,7 +1161,7 @@ inline namespace CO_DISPATCH_NS {
     }
     
     /**
-     @function 
+     @function
      Coroutine version of `dispatch_read`
      
      @return DispatchIOResult object with operation result
@@ -1174,7 +1175,7 @@ inline namespace CO_DISPATCH_NS {
     }
     
     /**
-     @function 
+     @function
      Coroutine version of `dispatch_io_write`
      
      Unlike `dispatch_io_write` the progressHandler parameter is optional and is only needed if you
@@ -1194,7 +1195,7 @@ inline namespace CO_DISPATCH_NS {
     }
     
     /**
-     @function 
+     @function
      Coroutine version of `dispatch_write`
      
      @return DispatchIOResult object with operation result

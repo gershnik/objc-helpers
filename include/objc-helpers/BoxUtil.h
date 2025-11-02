@@ -25,6 +25,7 @@
 #include <ostream>
 #include <sstream>
 #include <filesystem>
+#include <compare>
 
 
 /**
@@ -120,7 +121,7 @@ namespace BoxMakerDetail __attribute__((visibility("hidden"))) {
 template<class T>
 class __attribute__((visibility("hidden"))) BoxMaker {
 private:
-    static consteval auto detectBoxedType() {
+    static constexpr auto detectBoxedType() {
         if constexpr (std::totally_ordered<T>) {
             if constexpr (std::is_copy_constructible_v<T>) {
                 return (NSObject<BoxedValue, BoxedComparable, NSCopying> *)nullptr;
@@ -284,8 +285,13 @@ private:
             @throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"comparison operand is of invalid type" userInfo:nullptr];
         auto * val = (T *)classData.addrOfValue(self);
         auto * otherVal = (T *)classData.addrOfValue(other);
+#if _LIBCPP_VERSION >= 14000
         const auto res = std::compare_strong_order_fallback(*val, *otherVal);
         return NSComparisonResult(-(res < 0) + (res > 0));
+#else
+        return NSComparisonResult(-(*val < *otherVal) + (*val > *otherVal));
+#endif
+        
     }
 public:
     template<class... Args>
@@ -334,7 +340,7 @@ public:
  */
 template<class T, class... Args>
 requires(std::is_constructible_v<T, Args...>)
-inline auto box(Args &&... args) -> BoxMaker<T>::BoxedType
+inline auto box(Args &&... args) -> typename BoxMaker<T>::BoxedType
     { return BoxMaker<T>::box(std::forward<Args>(args)...); }
 
 
@@ -358,7 +364,7 @@ inline auto box(Args &&... args) -> BoxMaker<T>::BoxedType
  */
 template<class T>
 requires(std::is_constructible_v<std::remove_cvref_t<T>, T &&>)
-inline auto box(T && src) -> BoxMaker<T>::BoxedType
+inline auto box(T && src) -> typename BoxMaker<T>::BoxedType
     { return BoxMaker<std::remove_cvref_t<T>>::box(std::forward<T>(src)); }
 
 /**
