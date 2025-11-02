@@ -115,7 +115,7 @@ template<>
 struct std::formatter<NSString *> : std::formatter<std::string_view>
 {
     template<class FormatCtx>
-    auto format(NSString * __nullable obj, FormatCtx & ctx)
+    auto format(NSString * __nullable obj, FormatCtx & ctx) const
     {
         const char * str;
         
@@ -139,7 +139,7 @@ template<>
 struct fmt::formatter<NSString *> : fmt::formatter<std::string_view>
 {
     template<class FormatCtx>
-    auto format(NSString * __nullable obj, FormatCtx & ctx)
+    auto format(NSString * __nullable obj, FormatCtx & ctx) const
     {
         const char * str;
         
