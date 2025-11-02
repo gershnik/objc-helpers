@@ -2,7 +2,9 @@
 
 #include "../include/objc-helpers/BlockUtil.h"
 #include "../include/objc-helpers/BoxUtil.h"
-#include "../include/objc-helpers/CoDispatch.h"
+#if __cpp_lib_coroutine
+    #include "../include/objc-helpers/CoDispatch.h"
+#endif
 #include "../include/objc-helpers/NSStringUtil.h"
 #include "../include/objc-helpers/NSObjectUtil.h"
 #include "../include/objc-helpers/NSNumberUtil.h"
@@ -35,6 +37,8 @@
 @end
 
 //MARK: - GCD Coroutines Demo
+
+#if __cpp_lib_coroutine
 
 DispatchTask<int> CoroutineDemo() {
     
@@ -144,6 +148,8 @@ void CoroutineRunner() {
     NSRunLoop * theRL = [NSRunLoop currentRunLoop];
     while (shouldKeepRunning && [theRL runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]);
 }
+
+#endif
 
 //MARK: - Block Wrapping
 
@@ -346,13 +352,15 @@ void NSStringConversionsDemo() {
     std::vector<char> vec = {'a', 'b', 'c'};
     assert(eq(makeNSString(vec), @"abc"));
     
-    auto span = std::span(vec.begin(), vec.end());
+    auto span = std::span(vec.data(), vec.size());
     assert(eq(makeNSString(span), @"abc"));
     
     assert(makeStdString<char16_t>(@"abc") == u"abc");
     assert(makeStdString<char>(@"abc", 1) == "bc");
     assert(makeStdString<char32_t>(@"abc", 1, 1) == U"b");
+#if __cpp_lib_ranges >= 201911L
     assert(makeStdString<wchar_t>(NSStringCharAccess(@"abc") | std::views::take(2)) == L"ab");
+#endif
     NSStringCharAccess access(@"abc");
     assert(makeStdString<char8_t>(access.begin(), access.end()) == u8"abc");
 }
@@ -377,7 +385,9 @@ int main(int argc, const char * argv[]) {
     
     NSStringConversionsDemo();
     
+#if __cpp_lib_coroutine
     CoroutineRunner();
+#endif
     
     return 0;
 }

@@ -18,6 +18,8 @@ TEST_SUITE_BEGIN( "NSStringUtilTests" );
 static_assert(sizeof(NSStringCharAccess) == 21 * sizeof(void *));
 static_assert(alignof(NSStringCharAccess) == alignof(void *));
 
+#if __cpp_lib_ranges >= 201911L
+
 static_assert(std::is_same_v<std::ranges::iterator_t<NSStringCharAccess>, NSStringCharAccess::const_iterator>);
 //static_assert(std::is_same_v<std::ranges::const_iterator_t<NSStringCharAccess>, NSStringCharAccess::const_iterator>);
 static_assert(std::is_same_v<std::ranges::sentinel_t<NSStringCharAccess>, NSStringCharAccess::const_iterator>);
@@ -43,6 +45,8 @@ static_assert(!std::ranges::contiguous_range<NSStringCharAccess>);
 static_assert(std::ranges::common_range<NSStringCharAccess>);
 static_assert(std::ranges::viewable_range<NSStringCharAccess>);
 //static_assert(std::ranges::constant_range<NSStringCharAccess>);
+
+#endif
 
 
 TEST_CASE("comparison") {
@@ -90,6 +94,7 @@ TEST_CASE("format") {
 
 TEST_CASE("char access") {
     using namespace std::literals;
+#if __cpp_lib_ranges >= 201911L
     namespace r = std::ranges;
     namespace v = std::ranges::views;
     
@@ -110,6 +115,7 @@ TEST_CASE("char access") {
         CHECK(r::equal(NSStringCharAccess(str), u"75"sv));
         CHECK(r::equal(NSStringCharAccess(str) | v::reverse, u"57"sv));
     }
+#endif
     
     CHECK(NSStringCharAccess(nullptr).getString() == nullptr);
     CHECK(NSStringCharAccess::iterator().getString() == nullptr);
@@ -128,7 +134,9 @@ TEST_CASE("char access") {
     CHECK(access.rbegin() == access.crbegin());
     CHECK(access.end() == access.cend());
     CHECK(access.rend() == access.crend());
+#if __cpp_lib_ranges >= 201911L
     CHECK(r::equal(r::subrange(access.rbegin(), access.rend()), u"dcba"sv));
+#endif
     
     it1 = access.begin();
     it2 = it1++;
@@ -176,7 +184,7 @@ TEST_CASE("makeNSString") {
         std::vector<char16_t> vec = {u'a', u'b', u'c'};
         CHECK(eq(makeNSString(vec), @"abc"));
         
-        auto span = std::span(vec.begin(), vec.end());
+        auto span = std::span(vec.data(), vec.size());
         CHECK(eq(makeNSString(span), @"abc"));
         
         auto malformed = makeNSString(u"\xD800");
@@ -197,7 +205,7 @@ TEST_CASE("makeNSString") {
         std::vector<char> vec = {'a', 'b', 'c'};
         CHECK(eq(makeNSString(vec), @"abc"));
         
-        auto span = std::span(vec.begin(), vec.end());
+        auto span = std::span(vec.data(), vec.size());
         CHECK(eq(makeNSString(span), @"abc"));
         
         CHECK(makeNSString("\x80") == nullptr);
@@ -216,7 +224,7 @@ TEST_CASE("makeNSString") {
         std::vector<char> vec = {u8'a', u8'b', u8'c'};
         CHECK(eq(makeNSString(vec), @"abc"));
         
-        auto span = std::span(vec.begin(), vec.end());
+        auto span = std::span(vec.data(), vec.size());
         CHECK(eq(makeNSString(span), @"abc"));
         
         CHECK(makeNSString(u8"\x80") == nullptr);
@@ -235,7 +243,7 @@ TEST_CASE("makeNSString") {
         std::vector<char8_t> vec = {u8'a', u8'b', u8'c'};
         CHECK(eq(makeNSString(vec), @"abc"));
         
-        auto span = std::span(vec.begin(), vec.end());
+        auto span = std::span(vec.data(), vec.size());
         CHECK(eq(makeNSString(span), @"abc"));
         
         CHECK(makeNSString(u8"\x80") == nullptr);
@@ -254,7 +262,7 @@ TEST_CASE("makeNSString") {
         std::vector<char8_t> vec = {U'a', U'b', U'c'};
         CHECK(eq(makeNSString(vec), @"abc"));
         
-        auto span = std::span(vec.begin(), vec.end());
+        auto span = std::span(vec.data(), vec.size());
         CHECK(eq(makeNSString(span), @"abc"));
         
         CHECK(makeNSString({char32_t(0x110000)}) == nullptr);
@@ -273,7 +281,7 @@ TEST_CASE("makeNSString") {
         std::vector<char8_t> vec = {L'a', L'b', L'c'};
         CHECK(eq(makeNSString(vec), @"abc"));
         
-        auto span = std::span(vec.begin(), vec.end());
+        auto span = std::span(vec.data(), vec.size());
         CHECK(eq(makeNSString(span), @"abc"));
         
         CHECK(makeNSString({wchar_t(0x110000)}) == nullptr);
@@ -284,7 +292,9 @@ TEST_CASE("makeNSString") {
 TEST_CASE("makeStdString") {
     
     NSStringCharAccess access(@"abc");
+#if __cpp_lib_ranges >= 201911L
     using std::views::take;
+#endif
     
     auto malformed = makeNSString(u"\xD800");
     
@@ -293,7 +303,9 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<char16_t>(@"abc") == u"abc");
         CHECK(makeStdString<char16_t>(@"abc", 1) == u"bc");
         CHECK(makeStdString<char16_t>(@"abc", 1, 1) == u"b");
+#if __cpp_lib_ranges >= 201911L
         CHECK(makeStdString<char16_t>(NSStringCharAccess(@"abc") | take(2)) == u"ab");
+#endif
         CHECK(makeStdString<char16_t>(access.begin(), access.end()) == u"abc");
         CHECK(makeStdString<char16_t>(malformed) == u"\xD800");
     }
@@ -302,7 +314,9 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<char>(@"abc") == "abc");
         CHECK(makeStdString<char>(@"abc", 1) == "bc");
         CHECK(makeStdString<char>(@"abc", 1, 1) == "b");
+#if __cpp_lib_ranges >= 201911L
         CHECK(makeStdString<char>(NSStringCharAccess(@"abc") | take(2)) == "ab");
+#endif
         CHECK(makeStdString<char>(access.begin(), access.end()) == "abc");
         CHECK(makeStdString<char>(malformed) == "");
     }
@@ -311,7 +325,9 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<char8_t>(@"abc") == u8"abc");
         CHECK(makeStdString<char8_t>(@"abc", 1) == u8"bc");
         CHECK(makeStdString<char8_t>(@"abc", 1, 1) == u8"b");
+#if __cpp_lib_ranges >= 201911L
         CHECK(makeStdString<char8_t>(NSStringCharAccess(@"abc") | take(2)) == u8"ab");
+#endif
         CHECK(makeStdString<char8_t>(access.begin(), access.end()) == u8"abc");
         CHECK(makeStdString<char8_t>(malformed) == u8"");
     }
@@ -320,7 +336,9 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<char32_t>(@"abc") == U"abc");
         CHECK(makeStdString<char32_t>(@"abc", 1) == U"bc");
         CHECK(makeStdString<char32_t>(@"abc", 1, 1) == U"b");
+#if __cpp_lib_ranges >= 201911L
         CHECK(makeStdString<char32_t>(NSStringCharAccess(@"abc") | take(2)) == U"ab");
+#endif
         CHECK(makeStdString<char32_t>(access.begin(), access.end()) == U"abc");
         CHECK(makeStdString<char32_t>(malformed) == U"");
     }
@@ -329,7 +347,9 @@ TEST_CASE("makeStdString") {
         CHECK(makeStdString<wchar_t>(@"abc") == L"abc");
         CHECK(makeStdString<wchar_t>(@"abc", 1) == L"bc");
         CHECK(makeStdString<wchar_t>(@"abc", 1, 1) == L"b");
+#if __cpp_lib_ranges >= 201911L
         CHECK(makeStdString<wchar_t>(NSStringCharAccess(@"abc") | take(2)) == L"ab");
+#endif
         CHECK(makeStdString<wchar_t>(access.begin(), access.end()) == L"abc");
         CHECK(makeStdString<wchar_t>(malformed) == L"");
     }

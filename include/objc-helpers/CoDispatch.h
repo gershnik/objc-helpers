@@ -26,6 +26,7 @@
 #include <cassert>
 #include <limits>
 #include <utility>
+#include <exception>
 
 #include <dispatch/dispatch.h>
 #ifndef __OBJC__
@@ -316,7 +317,7 @@ inline namespace CO_DISPATCH_NS {
             }
             
             template<class X=ValueCarrier>
-            static auto moveOutValue(X::ValueToken token) noexcept(IsNoExceptExtractable) -> T
+            static auto moveOutValue(typename X::ValueToken token) noexcept(IsNoExceptExtractable) -> T
             requires(!ValueCarrier::isVoid && std::is_same_v<X, ValueCarrier>) {
                 Holder & holder = *token;
                 if constexpr (std::is_reference_v<T>)
@@ -658,7 +659,7 @@ inline namespace CO_DISPATCH_NS {
             
             template<class... Args>
             requires(DelayedValue::template IsEmplaceableFrom<Args...>)
-            void success(Args && ...args) const noexcept(noexcept(m_sharedState->emplaceReturnValue(std::forward<Args>(args)...))) 
+            void success(Args && ...args) const noexcept(noexcept(m_sharedState->emplaceReturnValue(std::forward<Args>(args)...)))
                 { m_sharedState->emplaceReturnValue(std::forward<Args>(args)...); }
             
             template<class X=DelayedValue>
@@ -958,7 +959,7 @@ inline namespace CO_DISPATCH_NS {
                 return awaiter{*this};
             }
             
-            void return_void() noexcept 
+            void return_void() noexcept
             {}
             
             void destroy() const noexcept {
@@ -1026,7 +1027,7 @@ inline namespace CO_DISPATCH_NS {
                 return m_valueToken;
             }
         private:
-            Iterator(Util::ClientAbandonPtr<Promise> && promise, dispatch_queue_t _Nullable queue, DelayedValue::ValueToken valueToken):
+            Iterator(Util::ClientAbandonPtr<Promise> && promise, dispatch_queue_t _Nullable queue, typename DelayedValue::ValueToken valueToken):
                 m_promise(std::move(promise)),
                 m_queue(queue),
                 m_valueToken(valueToken)
@@ -1034,7 +1035,7 @@ inline namespace CO_DISPATCH_NS {
         private:
             Util::ClientAbandonPtr<Promise> m_promise;
             Util::QueueHolder m_queue;
-            DelayedValue::ValueToken m_valueToken;
+            typename DelayedValue::ValueToken m_valueToken;
         };
         
         auto beginOn(dispatch_queue_t _Nullable queue) && noexcept {
@@ -1141,7 +1142,7 @@ inline namespace CO_DISPATCH_NS {
     };
     
     /**
-     @function 
+     @function
      Coroutine version of `dispatch_io_read`
      
      Unlike `dispatch_io_read` the progressHandler parameter is optional and is only needed if you
@@ -1160,7 +1161,7 @@ inline namespace CO_DISPATCH_NS {
     }
     
     /**
-     @function 
+     @function
      Coroutine version of `dispatch_read`
      
      @return DispatchIOResult object with operation result
@@ -1174,7 +1175,7 @@ inline namespace CO_DISPATCH_NS {
     }
     
     /**
-     @function 
+     @function
      Coroutine version of `dispatch_io_write`
      
      Unlike `dispatch_io_write` the progressHandler parameter is optional and is only needed if you
@@ -1194,7 +1195,7 @@ inline namespace CO_DISPATCH_NS {
     }
     
     /**
-     @function 
+     @function
      Coroutine version of `dispatch_write`
      
      @return DispatchIOResult object with operation result

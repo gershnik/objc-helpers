@@ -8,7 +8,7 @@ on:
 
 jobs:
   main:
-    runs-on: macOS-13
+    runs-on: macOS-latest
     permissions: write-all
     steps:
     - name: Checkout

@@ -15,9 +15,10 @@
 
 #include <version>
 
-#if __cpp_lib_ranges < 201911L
-    #error This header requires C++20 mode or above with ranges support
+#if !__cpp_concepts
+    #error This header requires C++20 mode or above with concepts support
 #endif
+
 
 #include "NSObjectUtil.h"
 
@@ -30,6 +31,10 @@
 #include <ranges>
 #include <string_view>
 #include <ostream>
+#if __cpp_lib_ranges < 201911L
+    #include <vector>
+    #include <span>
+#endif
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-extension"
@@ -110,7 +115,7 @@ template<>
 struct std::formatter<NSString *> : std::formatter<std::string_view>
 {
     template<class FormatCtx>
-    auto format(NSString * __nullable obj, FormatCtx & ctx)
+    auto format(NSString * __nullable obj, FormatCtx & ctx) const
     {
         const char * str;
         
@@ -134,7 +139,7 @@ template<>
 struct fmt::formatter<NSString *> : fmt::formatter<std::string_view>
 {
     template<class FormatCtx>
-    auto format(NSString * __nullable obj, FormatCtx & ctx)
+    auto format(NSString * __nullable obj, FormatCtx & ctx) const
     {
         const char * str;
         
@@ -446,6 +451,8 @@ inline auto makeStdString(NSStringCharAccess::const_iterator first, NSStringChar
     return makeStdString<Char>(first.getCFString(), first.index(), last.index() - first.index());
 }
 
+#if __cpp_lib_ranges >= 201911L
+    
 /**
  Converts NSStringCharAccess or a view derived from it to `std::basic_string<Char>`
  
@@ -489,6 +496,90 @@ inline auto makeCFString(const CharRange & range)  -> CFStringRef __nullable {
     }
 }
 
+#else
+
+/**
+ Converts `NSStringCharAccess`  to `std::basic_string<Char>`
+ 
+ @tparam Char character type of the resultant std::basic_string
+ 
+ Conversions to char16_t are exact and never fail. Conversions to other character types are transcodings and can fail if source string contains invalid UTF-16
+ sequences. In such cases an empty string is returned. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeStdString(const NSStringCharAccess & access) {
+    return makeStdString<Char>(access.begin(), access.end());
+}
+
+/**
+ Converts `std::basic_string_view` to `CFString`
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ @returns nullptr on failure
+ 
+ Conversions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeCFString(std::basic_string_view<Char> str)  -> CFStringRef __nullable {
+    if (str.empty())
+        return CFSTR("");
+    if constexpr (std::is_same_v<Char, char16_t>) {
+        return CFStringCreateWithCharacters(nullptr, (const UniChar *)str.data(), CFIndex(str.size()));
+    } else {
+        return CFStringCreateWithBytes(nullptr, (const UInt8 *)str.data(), CFIndex(str.size() * sizeof(Char)),
+                                       kCFStringEncodingFor<Char>, false);
+    }
+}
+
+/**
+ Converts `std::basic_string` to `CFString`
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ @returns nullptr on failure
+ 
+ Conversions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeCFString(std::basic_string<Char> str)  -> CFStringRef __nullable {
+    return makeCFString(std::basic_string_view<Char>(str));
+}
+
+/**
+ Converts `std::vector<Char>` to `CFString`
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ @returns nullptr on failure
+ 
+ Conversions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeCFString(std::vector<Char> str)  -> CFStringRef __nullable {
+    return makeCFString(std::basic_string_view<Char>(str.data(), str.size()));
+}
+
+/**
+ Converts `std::span<Char>` to `CFString`
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ @returns nullptr on failure
+ 
+ Conversions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeCFString(std::span<Char> str)  -> CFStringRef __nullable {
+    return makeCFString(std::basic_string_view<Char>(str.data(), str.size()));
+}
+
+#endif
+
 /**
  Converts a null terminated character string to CFString
  
@@ -524,6 +615,8 @@ inline auto makeCFString(const std::initializer_list<Char> & str) {
 
 #ifdef __OBJC__
 
+#if __cpp_lib_ranges >= 201911L
+
 /**
  Converts any contiguous range of characters to NSString
  
@@ -539,6 +632,70 @@ requires(CharTypeConvertibleWithNSString<std::ranges::range_value_t<CharRange>>)
 inline auto makeNSString(const CharRange & range) {
     return (__bridge_transfer NSString *)makeCFString(range);
 }
+
+#else
+
+/**
+ Converts `std::basic_string_view` to NSString
+ 
+ @returns nil on failure
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ Conversions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeNSString(std::basic_string_view<Char> str) {
+    return (__bridge_transfer NSString *)makeCFString(str);
+}
+
+/**
+ Converts `std::basic_string` to NSString
+ 
+ @returns nil on failure
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ Conversions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeNSString(std::basic_string<Char> str) {
+    return (__bridge_transfer NSString *)makeCFString(str);
+}
+
+/**
+ Converts `std::vector<Char>` to NSString
+ 
+ @returns nil on failure
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ Conversions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeNSString(std::vector<Char> str) {
+    return (__bridge_transfer NSString *)makeCFString(str);
+}
+
+/**
+ Converts `std::span<Char>` to NSString
+ 
+ @returns nil on failure
+ 
+ The type of range's characters can be any of: char, char16_t, char32_t, char8_t, wchar_t.
+ 
+ Conversions from char16_t are exact and can only fail if out of memory. Conversions from other character types are
+ transcodings and can fail if source string contains invalid UTF sequences. Encodings of char and wchar_t are UTF-8 and UTF-32 respectively.
+ */
+template<CharTypeConvertibleWithNSString Char>
+inline auto makeNSString(std::span<Char> str) {
+    return (__bridge_transfer NSString *)makeCFString(str);
+}
+
+#endif
 
 /**
  Converts a null terminated character string to NSString

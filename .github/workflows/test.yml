@@ -15,13 +15,23 @@ on:
       - 'tools/create-release.py'
       - '.github/workflows/publish.yml'
 
-env:
-  DEVELOPER_DIR: /Applications/Xcode_15.0.app
-
 jobs:
-  main:
-    runs-on: macOS-13
-    
+  mac:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: 
+        - { os: macOS-13, xcode: '15.0' }
+        - { os: macOS-13, xcode: '14.3' }
+        - { os: macos-14, xcode: '15.4.0' }
+        - { os: macos-15, xcode: '16.4.0' }
+        - { os: macos-15-intel, xcode: '16.4.0' }
+        - { os: macos-26, xcode: '26.0' }
+
+    env: 
+      DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode }}.app
+
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -35,7 +45,17 @@ jobs:
       run: DerivedData/Build/Products/Release/test
 
   linux:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - {os: ubuntu-22.04, version: 16 }
+        - {os: ubuntu-24.04, version: 17 }
+        - {os: ubuntu-24.04, version: 18 }
+        - {os: ubuntu-24.04, version: 19 }
+        - {os: ubuntu-24.04, version: 20 }
+        - {os: ubuntu-24.04, version: 21 }
     
     steps:
     - name: Checkout
@@ -51,7 +71,7 @@ jobs:
         echo "::group::Clang"
         wget https://apt.llvm.org/llvm.sh
         chmod u+x llvm.sh
-        sudo ./llvm.sh 16
+        sudo ./llvm.sh ${{ matrix.version }}
         echo "::endgroup::"
         
         echo "::group::libdispatch"
@@ -67,7 +87,7 @@ jobs:
       shell: bash
       run: |
         cd test
-        CLANG=clang++-16 make
+        CLANG=clang++-${{ matrix.version }} make
 
     - name: Run tests
       shell: bash

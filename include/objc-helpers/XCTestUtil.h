@@ -13,6 +13,10 @@
     #error This header requires C++20 mode or above with concepts support
 #endif
 
+#if !__has_feature(cxx_exceptions)
+    #error This header requires C++ exceptions to be enabled
+#endif
+
 #ifdef __OBJC__
 
 #import <XCTest/XCTest.h>
@@ -67,20 +71,49 @@ namespace TestUtil {
             return [NSString stringWithFormat:@"%s object", demangle(typeid(T).name()).c_str()];
         }
     }
+
+    inline NSString * getCurrentExceptionReason() {
+        std::exception_ptr ex = std::current_exception();
+        try {
+            std::rethrow_exception(ex);
+        } catch (NSException * nex) {
+            return nex.reason;
+        } catch (const std::exception & cex) {
+            return [NSString stringWithFormat:@"%s: %s", demangle(typeid(cex).name()).c_str(), cex.what()];
+        } catch(...) {
+            return @"unknown exception type";
+        }
+    }
 }
+
+#if defined(_XCT_TRY) && defined(_XCT_CATCH) && defined(_XCT_THROW)
+    #define OBJCH_XCT_TRY _XCT_TRY
+    #define OBJCH_XCT_CATCH(T) _XCT_CATCH(T)
+    #define OBJCH_XCT_THROW _XCT_THROW
+#else
+    #define OBJCH_XCT_TRY try
+    #define OBJCH_XCT_CATCH(T) catch(T)
+    #define OBJCH_XCT_THROW throw
+#endif
+
+#ifdef _XCTGetCurrentExceptionReason
+    #define objchGetCurrentExceptionReason _XCTGetCurrentExceptionReason
+#else
+    #define objchGetCurrentExceptionReason TestUtil::getCurrentExceptionReason
+#endif
 
 #define XCTPrimitiveAssertCpp(test, op, type, expression1, expressionStr1, expression2, expressionStr2, ...) \
 ({ \
-    _XCT_TRY { \
+    OBJCH_XCT_TRY { \
         __typeof__(expression1) expressionValue1 = (expression1); \
         __typeof__(expression2) expressionValue2 = (expression2); \
         if (expressionValue1 op expressionValue2) { \
             _XCTRegisterFailure(test, _XCTFailureDescription((type), 0, expressionStr1, expressionStr2, TestUtil::describeForTest(expressionValue1), TestUtil::describeForTest(expressionValue2)), __VA_ARGS__); \
         } \
     } \
-    _XCT_CATCH (_XCTestCaseInterruptionException *interruption) { [interruption raise]; } \
-    _XCT_CATCH (...) { \
-        NSString *_xct_reason = _XCTGetCurrentExceptionReason(); \
+    OBJCH_XCT_CATCH (_XCTestCaseInterruptionException *interruption) { [interruption raise]; } \
+    OBJCH_XCT_CATCH (...) { \
+        NSString *_xct_reason = objchGetCurrentExceptionReason(); \
         _XCTRegisterUnexpectedFailure(test, _XCTFailureDescription((type), 1, expressionStr1, expressionStr2, _xct_reason), __VA_ARGS__); \
     } \
 })
