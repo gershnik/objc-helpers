@@ -88,7 +88,7 @@ namespace TestUtil {
 
 #if defined(_XCT_TRY) && defined(_XCT_CATCH) && defined(_XCT_THROW)
     #define OBJCH_XCT_TRY _XCT_TRY
-    #define OBJCH_CATCH(T) _XCT_CATCH(T)
+    #define OBJCH_XCT_CATCH(T) _XCT_CATCH(T)
     #define OBJCH_XCT_THROW _XCT_THROW
 #else
     #define OBJCH_XCT_TRY try

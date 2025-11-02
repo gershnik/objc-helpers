@@ -393,7 +393,6 @@
 				GCC_WARN_UNUSED_LABEL = YES;
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(PLATFORM_DIR)/Developer/Library/Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				OTHER_CFLAGS = (
 					"-fprofile-instr-generate",
 					"-fcoverage-mapping",
@@ -421,7 +420,6 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(PLATFORM_DIR)/Developer/Library/Frameworks";
 				LLVM_LTO = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				OTHER_CFLAGS = (
 					"-fprofile-instr-generate",
 					"-fcoverage-mapping",
