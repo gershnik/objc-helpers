@@ -1027,7 +1027,7 @@ inline namespace CO_DISPATCH_NS {
                 return m_valueToken;
             }
         private:
-            Iterator(Util::ClientAbandonPtr<Promise> && promise, dispatch_queue_t _Nullable queue, DelayedValue::ValueToken valueToken):
+            Iterator(Util::ClientAbandonPtr<Promise> && promise, dispatch_queue_t _Nullable queue, typename DelayedValue::ValueToken valueToken):
                 m_promise(std::move(promise)),
                 m_queue(queue),
                 m_valueToken(valueToken)
