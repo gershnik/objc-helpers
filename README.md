@@ -290,6 +290,20 @@ Header `NSStringUtil.h` provides additional `operator<<` to print an `NSString` 
 Both headers also provide `std::formatter`s with the same functionality if `std::format` is available in the standard library and
 `fmt::formatter` if a macro `NS_OBJECT_UTIL_USE_FMT` is defined. In the later case presence of `<fmt/format.h>` or `"fmt/format.h"` include file is required.
 
+Note that since version 0.8 `fmt` library disallows formatting of any kind of naked pointers, whether they have custom formatter or not.
+(See https://github.com/fmtlib/fmt/issues/4037). Thus to format ObjC pointers you need to use `fmt::nsptr` wrapper provided by this library
+and patterned after `fmt::ptr`. Here is a short example of equivalent printing an `NSObject *` using all 3 methods:
+
+```cpp
+
+NSObject * obj = ...;
+
+std::cout << obj << '\n';
+std::println("{}", obj);
+fmt::println("{}", fmt::nsptr(obj));
+
+```
+
 
 ### Accessing NSString/CFString as a char16_t container ###
 
