@@ -106,7 +106,10 @@ inline std::ostream & operator<<(std::ostream & stream, NSString * __nullable st
     return stream << str.UTF8String;
 }
 
-#if __cpp_lib_format > 201907
+//See https://github.com/llvm/llvm-project/issues/77773 for the sad story of how feature test
+//macros are useless with libc++
+#if (__cpp_lib_format >= 201907L || (defined(_LIBCPP_VERSION) && _LIBCPP_VERSION >= 170000)) && __has_include(<format>)
+
 
 /**
  Serialization into std::format
@@ -136,7 +139,7 @@ struct std::formatter<NSString *> : std::formatter<std::string_view>
  Serialization into fmt::format
  */
 template<>
-struct fmt::formatter<NSString *> : fmt::formatter<std::string_view>
+struct fmt::formatter<NSString * __nullable> : fmt::formatter<std::string_view>
 {
     template<class FormatCtx>
     auto format(NSString * __nullable obj, FormatCtx & ctx) const
@@ -147,6 +150,26 @@ struct fmt::formatter<NSString *> : fmt::formatter<std::string_view>
             str = "null";
         else
             str = obj.UTF8String;
+        
+        return fmt::formatter<std::string_view>::format(str, ctx);
+    }
+};
+
+/**
+ Serialization into fmt::format
+ */
+template<>
+struct fmt::formatter<fmt::nsptr_holder<NSString>> : fmt::formatter<std::string_view>
+{
+    template<class FormatCtx>
+    auto format(fmt::nsptr_holder<NSString> holder, FormatCtx & ctx) const
+    {
+        const char * str;
+        
+        if (!holder.ptr)
+            str = "null";
+        else
+            str = holder.ptr.UTF8String;
         
         return fmt::formatter<std::string_view>::format(str, ctx);
     }

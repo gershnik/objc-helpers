@@ -15,7 +15,7 @@
 
 #include <ostream>
 
-#if __cpp_lib_format > 201907
+#if (__cpp_lib_format >= 201907L || (defined(_LIBCPP_VERSION) && _LIBCPP_VERSION >= 170000)) && __has_include(<format>)
     #include <format>
 #endif
 
@@ -33,7 +33,7 @@
  */
 struct NSObjectEqual
 {
-    bool operator()(id<NSObject> lhs, id<NSObject> rhs) const
+    bool operator()(id<NSObject> __nullable lhs, id<NSObject> __nullable rhs) const
     {
         if (!lhs) return !rhs;
         return [lhs isEqual:rhs];
@@ -45,7 +45,7 @@ struct NSObjectEqual
  */
 struct NSObjectHash
 {
-    size_t operator()(id<NSObject> obj) const
+    size_t operator()(id<NSObject> __nullable obj) const
     {
         return obj.hash;
     }
@@ -54,7 +54,7 @@ struct NSObjectHash
 /**
  Serialization into ostream
  */
-inline std::ostream & operator<<(std::ostream & stream, id<NSObject> obj)
+inline std::ostream & operator<<(std::ostream & stream, id<NSObject> __nullable obj)
 {
     if (!obj)
         return stream << nullptr;
@@ -64,7 +64,7 @@ inline std::ostream & operator<<(std::ostream & stream, id<NSObject> obj)
     return stream << obj.description.UTF8String;
 }
 
-#if __cpp_lib_format > 201907
+#if (__cpp_lib_format >= 201907L || (defined(_LIBCPP_VERSION) && _LIBCPP_VERSION >= 170000)) && __has_include(<format>)
 
 /**
  Serialization into std::format
@@ -73,7 +73,7 @@ template<class T>
 struct std::formatter<T, std::enable_if_t<std::is_convertible_v<T, id<NSObject>>, char>> : std::formatter<std::string_view>
 {
     template<class FormatCtx>
-    auto format(id<NSObject> obj, FormatCtx & ctx)
+    auto format(id<NSObject> __nullable obj, FormatCtx & ctx)
     {
         const char * str;
         
@@ -92,14 +92,30 @@ struct std::formatter<T, std::enable_if_t<std::is_convertible_v<T, id<NSObject>>
 
 #ifdef NS_OBJECT_UTIL_USE_FMT
 
+namespace fmt
+{
+    template<class T>
+    struct nsptr_holder
+    {
+        T * __nullable ptr;
+    };
+    
+    template <typename T>
+    std::enable_if_t<std::is_convertible_v<T, id<NSObject>>,
+    nsptr_holder<std::remove_pointer_t<T>>>
+    nsptr(T p) { return {p}; }
+}
+
+
+
 /**
- Serialization into fmt::format
+ Serialization into older fmt::format
  */
 template<class T>
 struct fmt::formatter<T, std::enable_if_t<std::is_convertible_v<T, id<NSObject>>, char>> : fmt::formatter<std::string_view>
 {
     template<class FormatCtx>
-    auto format(id<NSObject> obj, FormatCtx & ctx)
+    auto format(id<NSObject> __nullable obj, FormatCtx & ctx) const
     {
         const char * str;
         
@@ -109,6 +125,28 @@ struct fmt::formatter<T, std::enable_if_t<std::is_convertible_v<T, id<NSObject>>
             str = [(id)obj descriptionWithLocale:NSLocale.currentLocale].UTF8String;
         else
             str = obj.description.UTF8String;
+        
+        return fmt::formatter<std::string_view>::format(str, ctx);
+    }
+};
+
+/**
+ Serialization into newer fmt::format
+ */
+template<class T>
+struct fmt::formatter<fmt::nsptr_holder<T>, std::enable_if_t<std::is_convertible_v<T *, id<NSObject>>, char>> : fmt::formatter<std::string_view>
+{
+    template<class FormatCtx>
+    auto format(fmt::nsptr_holder<T> holder, FormatCtx & ctx) const
+    {
+        const char * str;
+        
+        if (!holder.ptr)
+            str = "<null>";
+        else if ([holder.ptr respondsToSelector:@selector(descriptionWithLocale:)])
+            str = [(id)holder.ptr descriptionWithLocale:NSLocale.currentLocale].UTF8String;
+        else
+            str = holder.ptr.description.UTF8String;
         
         return fmt::formatter<std::string_view>::format(str, ctx);
     }
