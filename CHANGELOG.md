@@ -6,11 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## Unreleased
 
 ### Added
+- `makeWeak`/`makeStrong` now work for block pointers too
 - The library has been back-ported to work with Xcode 13 and 14. Previously Xcode 15 or higher was required.
   Note that some functionality may be not present or limited on these older versions.
 
 ### Fixed
-- Formatting `NSString *` via `std::format` and `fmt::format` now works again on latest Xcode/libc++ versions. 
+- Formatting `NSString *` via `std::format` now works again on latest Xcode/libc++ versions.
+- Formatting `NSString *` and `NSObject *` via `fmt::format` now also works again for `fmt` greater than 0.8.
+  You need to use added `fmt::nsptr` for this (due to https://github.com/fmtlib/fmt/issues/4037)
 
 ## [3.1] - 2024-08-08
 
