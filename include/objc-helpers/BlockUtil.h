@@ -549,6 +549,13 @@ namespace BlockUtil
             template<class T>
             auto makeWeak(T * __strong obj) -> T * __weak
                 { return obj; }
+        
+            /**
+             Convert strong block pointer to a weak pointer of the same type
+            */
+            template<class R, class... Args>
+            auto makeWeak(R (^ __strong obj)(Args...)) -> R (^ __weak)(Args...)
+                { return obj; }
 
             /**
              Convert weak pointer to a strong pointer of the same type
@@ -564,6 +571,13 @@ namespace BlockUtil
             */
             template<class T>
             auto makeStrong(T * __weak obj) -> T * __strong
+                { return obj; }
+        
+            /**
+             Convert weak block pointer to a strong pointer of the same type
+            */
+            template<class R, class... Args>
+            auto makeStrong(R (^ __weak obj)(Args...)) -> R (^ __strong)(Args...)
                 { return obj; }
 
         #endif
