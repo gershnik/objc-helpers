@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## [3.2] - 2025-11-17
+
 ### Added
 - `makeWeak`/`makeStrong` now work for block pointers too
 - The library has been back-ported to work with Xcode 13 and 14. Previously Xcode 15 or higher was required.
@@ -84,3 +86,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 [2.3]: https://github.com/gershnik/objc-helpers/releases/v2.3
 [3.0]: https://github.com/gershnik/objc-helpers/releases/v3.0
 [3.1]: https://github.com/gershnik/objc-helpers/releases/v3.1
+[3.2]: https://github.com/gershnik/objc-helpers/releases/v3.2
