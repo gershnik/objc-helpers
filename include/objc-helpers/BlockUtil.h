@@ -294,8 +294,8 @@ namespace BlockUtil
             }
             
             static auto invokeDeletedBlock(BlockWithCallable *, Args...) -> Ret {
-                __assert_rtn(__func__, __ASSERT_FILE_NAME, __LINE__,
-                             "You are trying to invoke a destroyed block (do you need to copy() it?)");
+                //You are trying to invoke a deleted block (do you need to copy() it?)"
+                abort();
             }
             
             auto castToBlockType() const noexcept -> BlockType {
