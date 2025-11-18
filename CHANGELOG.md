@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+### Added
+- It is now possible to take block pointers cast from `makeBlock` blocks outside the current
+  scope in ObjectiveC++ using `copy()` method. Previously `copy()` was not available in
+  ObjectiveC++. Trying to take the pointer outside of the current scope without it was and is
+  undefined behavior and resulted in a crush.
+
 ## [3.2] - 2025-11-17
 
 ### Added

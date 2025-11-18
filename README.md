@@ -93,7 +93,8 @@ dispatch_async(someQueue, makeBlock([ptr=str::move(ptr)]() {
 
 One important thing to keep in mind is that the object returned from `makeBlock`/`makeMutableBlock` **is the block**. It is NOT a block pointer (e.g. Ret (^) (args)) and it doesn't "store" the block pointer inside. The block's lifetime is this object's lifetime and it ends when this object is destroyed. You can copy/move this object around and invoke it as any other C++ callable.
 You can also convert it to the block _pointer_ as needed either using implicit conversion or a `.get()` member function.
-In ObjectiveC++ the block pointer lifetime is not-related to the block object's one. The objective C++ ARC machinery will do the 
+
+In ObjectiveC++ the block pointer lifetime **in a single scope** is not-related to the block object's one. The objective C++ ARC machinery will do the 
 necessary magic behind the scenes. For example:
 
 ```c++
@@ -102,7 +103,22 @@ void (^block)(int) = makeBlock([](int){});
 block(7); // this works even though the original block object is already destroyed
 ```
 
-In plain C++ the code above would crash since there is no ARC magic. You need to manually manage block pointers lifecycle using
+However, if you want to preserve the block pointer outside of the current scope you need to manually copy it:
+
+```objc
+//In ObjectiveC++
+@implementation foo {
+    void (^_instanceVar)(int);
+}
+
+- (void) someMethod {
+    //moving the pointer outside of the current scope
+    _instanceVar = copy(makeBlock([](int){}));
+}
+@end
+```
+
+In plain C++ there is no ARC magic so you need to manually manage block pointers lifecycle using
 `copy` and `Block_release`. For example:
 ```c++
 //In plain C++ 

@@ -139,12 +139,20 @@ namespace BlockUtil
          * when needed, **converted to a block pointer**
          *
          * The lifetime of the block is the lifetime of this object. However, when converted to a block pointer
-         * the usual block machinery kicks in. In ObjectiveC++ keeping the ARC pointer around will internally copy the
-         * block to the heap and extend its lifetime.
+         * the usual block machinery kicks in. In ObjectiveC++ converting to a local variable ARC pointer
+         * will internally copy the block to the heap and extend its lifetime.
          * @code
-         * int (^block)() = BlockWrapper(...);
+         * int (^block)() = makeBlock([](){ });
          * @endcode
-         * In plain C++ you need to use copy() method for this.
+         *
+         * However **this doesn't work** if you convert into a pointer that outlives the current block. In this
+         * case you need to use copy() method
+         *
+         * @code
+         *  _instanceVar = copy(makeBlock([](){ }));
+         * @endcode
+         *
+         * In plain C++ with no ARC you **always** need to use copy() method for this.
          * @code
          * int (^block)() = copy(makeBlock([](){ }));
          * ...
@@ -181,7 +189,7 @@ namespace BlockUtil
                 disposeBlock(this);
 #ifndef NDEBUG
                 //catch lifecycle issues in debug mode
-                this->invoke = nullptr;
+                this->invoke = invokeDeletedBlock;
 #endif
             }
             
@@ -235,7 +243,16 @@ namespace BlockUtil
                 return callable(std::forward<Args>(args)...);
             }
             
-#ifndef __OBJC__
+#ifdef __OBJC__
+            friend auto copy(const BlockWithCallable & obj) -> BlockType {
+                auto dummy = (BlockType)obj;
+                return dummy;
+            }
+            friend auto copy(BlockWithCallable && obj) -> BlockType {
+                auto dummy = (BlockType)std::move(obj);
+                return dummy;
+            }
+#else
             friend auto copy(const BlockWithCallable & obj) -> BlockType {
                 return Block_copy((BlockType)&obj);
             }
@@ -276,6 +293,11 @@ namespace BlockUtil
                 return callable(std::forward<Args>(args)...);
             }
             
+            static auto invokeDeletedBlock(BlockWithCallable *, Args...) -> Ret {
+                __assert_rtn(__func__, __ASSERT_FILE_NAME, __LINE__,
+                             "You are trying to invoke a destroyed block (do you need to copy() it?)");
+            }
+            
             auto castToBlockType() const noexcept -> BlockType {
 #ifdef __OBJC__
                 //This, despite appearances, does the right thing by fooling ARC
@@ -291,6 +313,8 @@ namespace BlockUtil
                 return (BlockType)this;
 #endif
             }
+            
+            
             
         private:
             alignas(alignof(Callable)) std::byte callableBuf[sizeof(Callable)];

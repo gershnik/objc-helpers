@@ -46,7 +46,18 @@ namespace {
 static int testBlock(int (^block)()) { return block(); }
 static int testBlock(int (^block)(int), int val) { return block(val); }
 
+static int (^g_block)(int);
+
 TEST_CASE( "makeBlock" ) {
+    
+    @autoreleasepool 
+    {
+        foo::record.clear();
+        g_block = copy(makeBlock(foo{}));
+        g_block(5);
+        g_block = nil;
+    }
+    CHECK(foo::record == "dmm~~o~");
     
     {
         foo::record.clear();
