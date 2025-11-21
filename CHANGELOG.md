@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## [3.3] - 2025-11-21
+
 ### Added
 - It is now possible to take block pointers cast from `makeBlock` blocks outside the current
   scope in ObjectiveC++ using `copy()` method. Previously `copy()` was not available in
@@ -93,3 +95,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 [3.0]: https://github.com/gershnik/objc-helpers/releases/v3.0
 [3.1]: https://github.com/gershnik/objc-helpers/releases/v3.1
 [3.2]: https://github.com/gershnik/objc-helpers/releases/v3.2
+[3.3]: https://github.com/gershnik/objc-helpers/releases/v3.3
