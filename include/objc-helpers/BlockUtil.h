@@ -559,9 +559,39 @@ namespace BlockUtil
         }
 
         #if __has_feature(objc_arc)
+
+            /**
+             * A wrapper that allows transporting weak pointers
+             * out of functions. Clang does not allow to return 
+             * a weak pointer.
+             */
+            template<class T>
+            struct WeakHolder {
+                T * __weak obj;
+                
+                operator T *() const { return obj; }
+            };
+
+            /**
+             * A wrapper that allows transporting weak block pointers
+             * out of functions. Clang does not allow to return 
+             * a weak pointer.
+             */
+            template<class R, class... Args>
+            struct WeakHolder<R (Args...)> {
+                R (^ __weak obj)(Args...);
+                
+                using StrongType =  R (^ __strong)(Args...);
+                
+                operator StrongType() const { return obj; }
+            };
         
             /**
-             Convert strong pointer to a weak pointer of the same type
+             Convert strong pointer to a weak pointer (wrapper) of the same type
+
+             Note that Clang does not allow to return a weak pointer so a wrapper is
+             returned instead. This wrapper can be passed to makeStrong() or converted to
+             a normal (weak or strong) ObjC pointer
              
              Usage:
              @code
@@ -571,15 +601,20 @@ namespace BlockUtil
              @endcode
             */
             template<class T>
-            auto makeWeak(T * __strong obj) -> T * __weak
-                { return obj; }
+            auto makeWeak(T * __strong obj) -> WeakHolder<T>
+                { return {obj}; }
         
             /**
              Convert strong block pointer to a weak pointer of the same type
+
+             Note that Clang does not allow to return a weak pointer so a wrapper is
+             returned instead. This wrapper can be passed to makeStrong() or converted to
+             a normal (weak or strong) ObjC pointer
+
             */
             template<class R, class... Args>
-            auto makeWeak(R (^ __strong obj)(Args...)) -> R (^ __weak)(Args...)
-                { return obj; }
+            auto makeWeak(R (^ __strong obj)(Args...)) -> WeakHolder<R (Args...)>
+                { return {obj}; }
 
             /**
              Convert weak pointer to a strong pointer of the same type
@@ -594,15 +629,15 @@ namespace BlockUtil
             @endcode
             */
             template<class T>
-            auto makeStrong(T * __weak obj) -> T * __strong
-                { return obj; }
-        
+            auto makeStrong(WeakHolder<T> holder) -> T *
+                { return holder.obj; }
+
             /**
              Convert weak block pointer to a strong pointer of the same type
             */
             template<class R, class... Args>
-            auto makeStrong(R (^ __weak obj)(Args...)) -> R (^ __strong)(Args...)
-                { return obj; }
+            auto makeStrong(WeakHolder<R (Args...)> holder) -> R (^)(Args...)
+                { return holder.obj; }
 
         #endif
 
