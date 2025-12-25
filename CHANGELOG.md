@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+### Fixed
+- At some point clang started dropping `__weak` qualifier on function return types
+  which utterly broke `makeWeak`. This is now fixed.
+
 ## [3.3] - 2025-11-21
 
 ### Added
