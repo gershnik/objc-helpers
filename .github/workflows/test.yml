@@ -22,12 +22,12 @@ jobs:
       fail-fast: false
       matrix:
         include: 
-        - { os: macOS-13, xcode: '15.0' }
-        - { os: macOS-13, xcode: '14.3' }
+        #- { os: macOS-13, xcode: '15.0' }
+        #- { os: macOS-13, xcode: '14.3' }
         - { os: macos-14, xcode: '15.4.0' }
         - { os: macos-15, xcode: '16.4.0' }
         - { os: macos-15-intel, xcode: '16.4.0' }
-        - { os: macos-26, xcode: '26.0' }
+        - { os: macos-26, xcode: '26.2.0' }
 
     env: 
       DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode }}.app
