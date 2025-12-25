@@ -639,6 +639,21 @@ namespace BlockUtil
             auto makeStrong(WeakHolder<R (Args...)> holder) -> R (^)(Args...)
                 { return holder.obj; }
 
+
+            /**
+             Convert weak pointer to a strong pointer of the same type
+             */
+            template<class T>
+            auto makeStrong(T * __weak obj) -> T *
+                { return obj; }
+        
+            /**
+             Convert weak block pointer to a strong pointer of the same type
+            */
+            template<class R, class... Args>
+            auto makeStrong(R (^ __weak obj)(Args...)) -> R (^)(Args...)
+                { return obj; }
+
         #endif
 
     }
