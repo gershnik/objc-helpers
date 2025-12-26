@@ -23,6 +23,7 @@
 
 #include <sstream>
 #include <cxxabi.h>
+#include <exception>
 
 namespace TestUtil {
     using std::to_string;
