@@ -7,7 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 - Added `<exception>` header include to XCTestUtil.h that is now required on newer Xcodes
-- 
+- Making `BoxUtil.h` not rely on `std::filesystem` which is not available on older Apple
+  platforms.
 
 ## [3.4] - 2025-12-26
 
