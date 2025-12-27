@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+### Fixed
+- Added `<exception>` header include to XCTestUtil.h that is now required on newer Xcodes
+- 
+
 ## [3.4] - 2025-12-26
 
 ### Fixed

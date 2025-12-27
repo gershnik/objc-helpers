@@ -60,6 +60,17 @@ namespace BoxMakerDetail __attribute__((visibility("hidden"))) {
     
     template<class T>
     concept Hashable = std::is_default_constructible_v<std::hash<T>>;
+
+
+    inline std::string moduleFromFilePath(std::string_view filePath) {
+        
+        auto lastSlashPos = filePath.rfind('/');
+        std::string_view filename = filePath.substr(lastSlashPos + 1);
+        auto lastDotPos = filename.rfind('.');
+        if (lastDotPos == filename.npos || lastDotPos == 0)
+            return std::string(filename);
+        return std::string(filename.substr(0, lastDotPos));
+    }
     
     
     inline decltype(auto) getObjcData() {
@@ -84,8 +95,7 @@ namespace BoxMakerDetail __attribute__((visibility("hidden"))) {
                 Dl_info info;
                 if (!dladdr(sym, &info))
                     @throw [NSException exceptionWithName:NSGenericException reason:@"dladdr failed" userInfo:nullptr];
-                std::filesystem::path mypath(info.dli_fname);
-                modulePrefix = mypath.stem().string() + '!';
+                modulePrefix = moduleFromFilePath(info.dli_fname) + '!';
             }
         };
         
