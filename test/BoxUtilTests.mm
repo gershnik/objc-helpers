@@ -12,6 +12,11 @@ TEST_CASE( "integer" ) {
     CHECK([obj.description isEqualToString:@"42"]);
     CHECK(obj.hash == std::hash<int>()(42));
     
+    CHECK([obj conformsToProtocol:@protocol(NSCopying)]);
+    CHECK([obj conformsToProtocol:@protocol(BoxedValue)]);
+    CHECK([obj conformsToProtocol:@protocol(BoxedComparable)]);
+    CHECK([obj conformsToProtocol:@protocol(NSObject)]);
+    
     @try {
         boxedValue<long>(obj);
         FAIL("able to unbox wrong type");
@@ -71,6 +76,12 @@ TEST_CASE( "string" ) {
     
     auto obj = box(std::string("abc"));
     static_assert(std::is_same_v<decltype(obj), NSObject<BoxedValue, BoxedComparable, NSCopying> *>);
+    
+    CHECK([obj conformsToProtocol:@protocol(NSCopying)]);
+    CHECK([obj conformsToProtocol:@protocol(BoxedValue)]);
+    CHECK([obj conformsToProtocol:@protocol(BoxedComparable)]);
+    CHECK([obj conformsToProtocol:@protocol(NSObject)]);
+    
     CHECK(boxedValue<std::string>(obj) == str);
     CHECK([obj.description isEqualToString:@"abc"]);
     CHECK(obj.hash == std::hash<std::string>()(str));
@@ -93,6 +104,12 @@ TEST_CASE( "unique_ptr" ) {
     
     auto obj = box(std::make_unique<int>(5));
     static_assert(std::is_same_v<decltype(obj), NSObject<BoxedValue, BoxedComparable> *>);
+    
+    CHECK(![obj conformsToProtocol:@protocol(NSCopying)]);
+    CHECK([obj conformsToProtocol:@protocol(BoxedValue)]);
+    CHECK([obj conformsToProtocol:@protocol(BoxedComparable)]);
+    CHECK([obj conformsToProtocol:@protocol(NSObject)]);
+    
     CHECK(*boxedValue<std::unique_ptr<int>>(obj) == 5);
     
     @try {
@@ -142,6 +159,11 @@ TEST_CASE( "equal-no-hash" ) {
     auto obj2 = box(foo{4, 'b'});
     
     static_assert(std::is_same_v<decltype(obj1), NSObject<BoxedValue, NSCopying> *>);
+    
+    CHECK([obj1 conformsToProtocol:@protocol(NSCopying)]);
+    CHECK([obj1 conformsToProtocol:@protocol(BoxedValue)]);
+    CHECK(![obj1 conformsToProtocol:@protocol(BoxedComparable)]);
+    CHECK([obj1 conformsToProtocol:@protocol(NSObject)]);
     
     CHECK(boxedValue<foo>(obj1).i == 4);
     CHECK(boxedValue<foo>(obj2).c == 'b');

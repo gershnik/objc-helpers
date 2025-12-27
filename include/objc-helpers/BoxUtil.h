@@ -167,6 +167,9 @@ private:
             std::string className = objcData.modulePrefix + "Boxed["s + tid.name() + ']';
             Class cls = objc_allocateClassPair(objcData.NSObjectClass, className.c_str(), 0);
             classData.cls = cls;
+
+            if (!class_addProtocol(cls, @protocol(BoxedValue)))
+                    @throw [NSException exceptionWithName:NSGenericException reason:@"class_addProtocol(@protocol(NSCopying)) failed" userInfo:nullptr];
             
             if (!class_addIvar(cls, "_value", sizeof(T), alignof(T), @encode(T)))
                 @throw [NSException exceptionWithName:NSGenericException reason:@"class_addIvar(_value) failed" userInfo:nullptr];
@@ -185,6 +188,9 @@ private:
             if constexpr (std::is_copy_constructible_v<T>) {
                 if (!class_addMethod(cls, objcData.copyWithZoneSel, IMP(copyWithZone), "@@:@"))
                     @throw [NSException exceptionWithName:NSGenericException reason:@"class_addMethod(copyWithZone) failed" userInfo:nullptr];
+
+                if (!class_addProtocol(cls, @protocol(NSCopying)))
+                    @throw [NSException exceptionWithName:NSGenericException reason:@"class_addProtocol(@protocol(NSCopying)) failed" userInfo:nullptr];
             }
             
             if (!class_addMethod(cls, objcData.isEqualSel, IMP(isEqual), "@@:@"))
@@ -196,6 +202,8 @@ private:
             if constexpr (std::totally_ordered<T>) {
                 if (!class_addMethod(cls, objcData.compareSel, IMP(compare), (@encode(NSComparisonResult) + "@:@"s).c_str()))
                     @throw [NSException exceptionWithName:NSGenericException reason:@"class_addMethod(compare) failed" userInfo:nullptr];
+                if (!class_addProtocol(cls, @protocol(BoxedComparable)))
+                    @throw [NSException exceptionWithName:NSGenericException reason:@"class_addProtocol(@protocol(BoxedComparable)) failed" userInfo:nullptr];
             }
             
             objc_registerClassPair(cls);
