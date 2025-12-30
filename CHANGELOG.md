@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Boxed values now actually formally conform to relevant protocols (as reported by `confromsToProtocol:`)
 
 ### Fixed
+- Removed some optimizations in `makeBlock` that could cause unexpected block move
+  instead of copy when reusing block pointers
 - Added `<exception>` header include to XCTestUtil.h that is now required on newer Xcodes
 - Making `BoxUtil.h` not rely on `std::filesystem` which is not available on older Apple
   platforms.

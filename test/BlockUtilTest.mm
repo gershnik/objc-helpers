@@ -95,13 +95,14 @@ TEST_CASE( "makeBlock" ) {
         })) == 3);
     }
     
+    //TODO: these would ideally have two moves rather than movae+copy but doing so seems impossible
     {
         foo::record.clear();
         int (^block)(int) = makeBlock(foo{});
         
         CHECK(block(6) == 6);
     }
-    CHECK(foo::record == "dmm~~o~");
+    CHECK(foo::record == "dmc~~o~");
     
     {
         foo::record.clear();
@@ -110,7 +111,8 @@ TEST_CASE( "makeBlock" ) {
         
         CHECK(block2(6) == 6);
     }
-    CHECK(foo::record == "dmm~~o~");
+    CHECK(foo::record == "dmc~~o~");
+    //TODO: end
     
     {
         foo::record.clear();
@@ -151,6 +153,29 @@ TEST_CASE( "makeBlock" ) {
         CHECK(b1(42) == 42);
     }
     CHECK(foo::record == "dc~co~~");
+}
+
+
+static void inner(void (^bl1)(), void (^bl2)()) {
+    bl1();
+    bl2();
+}
+
+
+static void outer(void (^bl)()) {
+    inner(makeBlock([bl] {
+        bl();
+    }), makeBlock([bl] {
+        bl();
+    }));
+}
+
+TEST_CASE("makeBlock nested") {
+    
+    auto p = std::make_shared<int>(1);
+    outer(makeBlock([p] {
+        CHECK(p);
+    }));
 }
 
 @interface MakeStrongCheck : NSObject {

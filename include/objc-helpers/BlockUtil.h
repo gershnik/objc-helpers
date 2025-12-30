@@ -224,17 +224,8 @@ namespace BlockUtil
             operator BlockType() const & noexcept
                 { return castToBlockType();}
             
-            operator BlockType() && noexcept {
-                this->copyCanBeMove = true;
-                return castToBlockType();
-            }
             
             auto get() const & noexcept -> BlockType {
-                return castToBlockType();
-            }
-            
-            auto get() && noexcept -> BlockType {
-                this->copyCanBeMove = true;
                 return castToBlockType();
             }
             
@@ -249,7 +240,8 @@ namespace BlockUtil
                 return dummy;
             }
             friend auto copy(BlockWithCallable && obj) -> BlockType {
-                auto dummy = (BlockType)std::move(obj);
+                obj.copyCanBeMove = true;
+                auto dummy = (BlockType)obj;
                 return dummy;
             }
 #else
