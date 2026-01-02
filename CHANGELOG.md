@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## [3.5] - 2026-01-02
+
 ### Added
 - Boxed values now actually formally conform to relevant protocols (as reported by `confromsToProtocol:`)
 
@@ -113,3 +115,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 [3.2]: https://github.com/gershnik/objc-helpers/releases/v3.2
 [3.3]: https://github.com/gershnik/objc-helpers/releases/v3.3
 [3.4]: https://github.com/gershnik/objc-helpers/releases/v3.4
+[3.5]: https://github.com/gershnik/objc-helpers/releases/v3.5
