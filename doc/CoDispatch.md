@@ -108,7 +108,7 @@ std::vector<int> vec = co_await co_dispatch([]() {
 
 You can return pretty much anything a normal function can return: an object, a pointer, or a reference (both rvalue and lvalue ones). 
 
-> ℹ️️ Efficiency note: when returning objects by value they are moved twice (if they are movable). Once from the callable body into a coroutine storage and then from there into your code object. If the object is not movable, it is copied twice. (You cannot return non-copyable and non-movable objects from either function).
+> ℹ️️ Efficiency note: when returning objects by value they are moved twice (if they are movable). Once from the callable body into a coroutine storage and then from there into your code object. If the object is not movable, it is copied twice. (You cannot return objects which are _both_ non-copyable and non-movable from either function).
 
 Note that the `void` return type of `foo()` had to be changed to `DispatchTask<>` once it became a coroutine.
 Coroutines return tasks - not plain values.
@@ -220,8 +220,8 @@ auto result = co_await co_dispatch([]() noexcept {
 > ℹ️️ Note that even if your callable is `noexcept` the `co_dispatch` call can still throw exceptions (unless you compile with exceptions disabled). 
 
 This can happen in 2 cases:
-1. Memory allocation failure. `co_dispatch` needs to allocate a small memory area to keep state shared between the caller and asynchronous code. If allocating this area fails an exception will be thrown.
-2. Copying/moving your callable object throws an exception. `co_dispatch` needs to store a copy of your callable for execution on the dispatch queue. If possible it will move (and hopefully your move constructors don't throw!). If move is not available, it will copy. If copy (or move!) throws, this exception will propagate out of `co_dispatch`.
+1. Memory allocation failure. `co_dispatch` needs to allocate a small memory area to keep state shared between the caller and asynchronous code. If allocating this area fails, an exception will be thrown.
+2. Copying/moving your callable object throws an exception. `co_dispatch` needs to store a copy of your callable for execution on the dispatch queue. If possible, it will move (and hopefully your move constructors don't throw!). If move is not available, it will copy. If copy (or move!) throws, this exception will propagate out of `co_dispatch`.
 
 Note that such exceptions will also be reported directly to your calling code before anything asynchronous happens. Thus they will **not** honor `resumeOn` request. Which means that if your `catch` handler is sensitive to which queue it is running on you will need to [manually ensure](#switching-queues) that you are on that queue:
 
@@ -238,9 +238,9 @@ try {
 
 ### Delaying `co_await`
 
-In all the examples above the result of `co_dispatch` was immediately passed to `co_await`. Usually this is exactly what you want to do. However, on rare occasions it might be more efficient or convenient to schedule execution early and await it later.
+In all the examples above the result of `co_dispatch` was immediately passed to `co_await`. Usually this is exactly what you want to do. However, on rare occasions, it might be more efficient or convenient to schedule execution early and await it later.
 
-This is certainly possible but you need to remember to *move* the returned *awaitable* object.
+This is certainly possible, but you need to remember to *move* the returned *awaitable* object.
 
 ```objc++
 auto awaitable = co_dispatch([](){
@@ -250,7 +250,7 @@ auto awaitable = co_dispatch([](){
 int i = co_await std::move(awaitable);
 ```
 
-> ℹ️️ An awaitable returned from `co_dispatch` can be awaited **only once**. The required `std::move` syntax is a gentle reminder of that. If you try to await it again, you will crash. This rule applies to all awaitables produced by this library.
+> ℹ️️ An awaitable returned from `co_dispatch` can be awaited **only once**. The required `std::move` syntax is a gentle reminder of that. If you try to await moved-out object again, you will crash. This rule applies to all awaitables produced by this library.
 
 Note: It is possible to support multiple awaits but doing it comes at a large performance and complexity cost. The scenarios where multiple awaits are useful are so rare that supporting them does not justify the cost and penalty on normal users.
 
