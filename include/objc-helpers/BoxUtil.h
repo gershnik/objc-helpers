@@ -76,7 +76,6 @@ namespace BoxMakerDetail __attribute__((visibility("hidden"))) {
     inline decltype(auto) getObjcData() {
         
         struct ObjcData {
-            SEL newSel = @selector(init);
             SEL initSel = @selector(init);
             SEL deallocSel = sel_registerName("dealloc");
             SEL descriptionSel = @selector(description);
