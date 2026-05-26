@@ -276,7 +276,9 @@ auto hash = obj1.hash;
 
 auto desc = obj1.description;
 
-//if your object supports <=> operator that returns std::strong_ordering
+//if your object (explicitly or implicitly)  
+//supports <=> operator that returns std::strong_ordering
+//(i.e. is totally_ordered)
 //you can use compare: method
 assert([box(5) compare:box(6)] == NSOrderingAscending);
 
