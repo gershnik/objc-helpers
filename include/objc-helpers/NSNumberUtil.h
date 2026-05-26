@@ -22,7 +22,7 @@ struct NSNumberLess
 {
 public:
     
-    bool operator()(NSNumber * lhs, NSNumber * rhs) const noexcept
+    bool operator()(NSNumber * __nullable lhs, NSNumber * __nullable rhs) const noexcept
     {
         if (!lhs) return rhs;
         if (!rhs) return false;
@@ -39,7 +39,7 @@ public:
  */
 struct NSNumberEqual
 {
-    bool operator()(NSNumber * lhs, NSNumber * rhs) const
+    bool operator()(NSNumber * __nullable lhs, NSNumber * __nullable rhs) const
     {
         if (!lhs) return !rhs;
         if (!rhs) return false;

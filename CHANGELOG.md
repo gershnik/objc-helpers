@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Incorrect self-move test in BlockUtil. Extremely unlikely to ever affect any
   caller.
 
+### Added
+- Nullability annotations on NSNumberUtils
+
 ## [3.5] - 2026-01-02
 
 ### Added
