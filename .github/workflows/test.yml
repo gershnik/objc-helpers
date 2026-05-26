@@ -47,7 +47,7 @@ jobs:
           xcodebuild build -project test/test.xcodeproj \
                            -scheme test \
                            -config Release \
-                           -derivedDataPath DerivedData |
+                           -derivedDataPath DerivedData \
           | xcbeautify --renderer github-actions
 
     - name: Run tests
