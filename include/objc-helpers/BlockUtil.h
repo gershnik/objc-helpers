@@ -204,7 +204,7 @@ namespace BlockUtil
             }
              
             BlockWithCallable & operator=(const BlockWithCallable & src) 
-            requires(std::is_copy_constructible_v<Callable>) {
+            requires(std::is_nothrow_copy_constructible_v<Callable>) {
                 if (this != &src) {
                     disposeBlock(this);
                     reallyCopyBlock(this, &src);
@@ -213,7 +213,7 @@ namespace BlockUtil
             }
             
             BlockWithCallable & operator=(BlockWithCallable && src) 
-            requires(std::is_move_constructible_v<Callable>) {
+            requires(std::is_nothrow_move_constructible_v<Callable>) {
                 if (this != &src) {
                     disposeBlock(this);
                     moveBlock(this, &src);
