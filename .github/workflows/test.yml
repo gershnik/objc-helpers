@@ -52,7 +52,7 @@ jobs:
 
     - name: Run tests
       shell: bash
-      run: DerivedData/Build/Products/Release/test
+      run: DerivedData/Build/Products/Release/test -ni -fc
 
   linux:
     runs-on: ${{ matrix.os }}
@@ -102,4 +102,4 @@ jobs:
 
     - name: Run tests
       shell: bash
-      run: test/build/test
+      run: test/build/test -ni -fc
