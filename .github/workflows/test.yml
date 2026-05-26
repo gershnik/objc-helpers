@@ -34,11 +34,21 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
+
+    - name: Prepare system
+      shell: bash
+      run: brew install xcbeautify
 
     - name: Build tests
       shell: bash
-      run: xcodebuild build -project test/test.xcodeproj -scheme test -config Release -derivedDataPath DerivedData
+      run: |
+        set -o pipefail && \
+          xcodebuild build -project test/test.xcodeproj \
+                           -scheme test \
+                           -config Release \
+                           -derivedDataPath DerivedData |
+          | xcbeautify --renderer github-actions
 
     - name: Run tests
       shell: bash
@@ -56,10 +66,11 @@ jobs:
         - {os: ubuntu-24.04, version: 19 }
         - {os: ubuntu-24.04, version: 20 }
         - {os: ubuntu-24.04, version: 21 }
+        - {os: ubuntu-24.04, version: 22 }
     
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Prepare
       shell: bash

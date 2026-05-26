@@ -12,7 +12,7 @@ jobs:
     permissions: write-all
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Get release Name
       shell: python
@@ -30,7 +30,7 @@ jobs:
       run: tar -czf objc-helpers-${{ env.RELEASE_NAME }}.tar.gz include LICENSE VERSION CHANGELOG.md
 
     - name: Make release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v3
       with:
         draft: true
         prerelease: false
