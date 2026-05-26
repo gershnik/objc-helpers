@@ -1187,7 +1187,7 @@ inline namespace CO_DISPATCH_NS {
         return makeAwaitable<DispatchIOResult, SupportsExceptions::No>([channel, offset, data, queue, progressHandler](auto promise) {
             dispatch_io_write(channel, offset, data, queue, ^ (bool done, dispatch_data_t dataRemaining, int error){
                 if (progressHandler)
-                    progressHandler(done, data, error);
+                    progressHandler(done, dataRemaining, error);
                 if (done)
                     promise.success(dataRemaining, error);
             });

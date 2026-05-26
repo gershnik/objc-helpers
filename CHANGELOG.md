@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## Unreleased
 
 ### Fixed
+- `co_dispatch_io_write` reporting incorrect data to progress handler
 - Incorrect self-move test in BlockUtil. Extremely unlikely to ever affect any
   caller.
 
