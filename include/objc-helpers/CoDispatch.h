@@ -251,8 +251,6 @@ inline namespace CO_DISPATCH_NS {
                     //nothing
                 } else if constexpr (std::is_reference_v<T>) {
                     this->m_storage = std::addressof(args...);
-                } else if constexpr (noexcept(this->m_storage.template emplace<Holder>(std::forward<Args>(args)...))) {
-                    this->m_storage.template emplace<Holder>(std::forward<Args>(args)...);
                 } else {
                     this->m_storage.template emplace<Holder>(std::forward<Args>(args)...);
                 }
