@@ -382,7 +382,7 @@ inline auto box(Args &&... args) -> typename BoxMaker<T>::BoxedType
  */
 template<class T>
 requires(std::is_constructible_v<std::remove_cvref_t<T>, T &&>)
-inline auto box(T && src) -> typename BoxMaker<T>::BoxedType
+inline auto box(T && src) -> typename BoxMaker<std::remove_cvref_t<T>>::BoxedType
     { return BoxMaker<std::remove_cvref_t<T>>::box(std::forward<T>(src)); }
 
 /**
