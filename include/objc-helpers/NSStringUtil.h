@@ -254,7 +254,7 @@ public:
         
         friend difference_type operator-(const const_iterator & lhs, const const_iterator & rhs) noexcept
             { return lhs._idx - rhs._idx; }
-        friend const_iterator operator-(const const_iterator & lhs, int rhs) noexcept
+        friend const_iterator operator-(const const_iterator & lhs, difference_type rhs) noexcept
             { return const_iterator(lhs._owner, lhs._idx - rhs); }
         
         friend bool operator==(const const_iterator & lhs, const const_iterator & rhs) noexcept
