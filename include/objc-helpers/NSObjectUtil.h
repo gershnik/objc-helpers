@@ -73,7 +73,7 @@ template<class T>
 struct std::formatter<T, std::enable_if_t<std::is_convertible_v<T, id<NSObject>>, char>> : std::formatter<std::string_view>
 {
     template<class FormatCtx>
-    auto format(id<NSObject> __nullable obj, FormatCtx & ctx)
+    auto format(id<NSObject> __nullable obj, FormatCtx & ctx) const
     {
         const char * str;
         
