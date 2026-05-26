@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+### Fixed
+- Incorrect self-move test in BlockUtil. Extremely unlikely to ever affect any
+  caller.
+
 ## [3.5] - 2026-01-02
 
 ### Added

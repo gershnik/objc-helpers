@@ -214,7 +214,7 @@ namespace BlockUtil
             
             BlockWithCallable & operator=(BlockWithCallable && src) 
             requires(std::is_move_constructible_v<Callable>) {
-                if (this != src) {
+                if (this != &src) {
                     disposeBlock(this);
                     moveBlock(this, &src);
                 }
