@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Fixed
 - `co_dispatch_io_write` reporting incorrect data to progress handler
 - `std::formatter::format` for `NSObject` is now `const` as required by newer C++ standards.
+- Making `BoxUtil.h` not rely on `std::filesystem` for real this time.
 - Incorrect self-move test in BlockUtil. Extremely unlikely to ever affect any
   caller.
 
