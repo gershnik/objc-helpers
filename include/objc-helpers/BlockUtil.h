@@ -587,7 +587,7 @@ namespace BlockUtil
              
              Usage:
              @code
-             [foo doBar:BlockWrapper([weakSelf = makeWeak(self)] () {
+             [foo doBar:makeBlock([weakSelf = makeWeak(self)] () {
                 
              }];
              @endcode
@@ -613,8 +613,8 @@ namespace BlockUtil
              
              Usage:
              @code
-             [foo doBar:BlockWrapper([weakSelf = makeWeak(self)] () {
-                 auto self = makeStrong(self);
+             [foo doBar:makeBlock([weakSelf = makeWeak(self)] () {
+                 auto self = makeStrong(weakSelf);
                  if (!self)
                      return;
              }];
