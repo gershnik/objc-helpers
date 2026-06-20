@@ -14,7 +14,7 @@ NEW_VER = sys.argv[1]
 
 unreleased_link_pattern = re.compile(r"^\[Unreleased\]: (.*)$", re.DOTALL)
 lines = []
-with open(ROOT / "CHANGELOG.md", "rt") as change_log:
+with open(ROOT / "CHANGELOG.md", "rt", encoding='utf-8') as change_log:
     for line in change_log.readlines():
         # Move Unreleased section to new version
         if re.fullmatch(r"^## Unreleased.*$", line, re.DOTALL):
@@ -27,7 +27,7 @@ with open(ROOT / "CHANGELOG.md", "rt") as change_log:
             lines.append(line)
     lines.append(f'[{NEW_VER}]: https://github.com/gershnik/objc-helpers/releases/v{NEW_VER}\n')
 
-with open(ROOT / "CHANGELOG.md", "wt") as change_log:
+with open(ROOT / "CHANGELOG.md", "wt", encoding='utf-8') as change_log:
     change_log.writelines(lines)
 
 subprocess.run(['git', 'add', ROOT / "CHANGELOG.md"], check=True)
