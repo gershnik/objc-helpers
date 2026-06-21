@@ -19,9 +19,15 @@ An ever-growing collection of utilities to make coding on Apple platforms in C++
 
 ## What's included? ##
 
-The library is a collection of mostly independent header files. There is nothing to link with. Simply add these headers to your include path and include them as needed.
+The library is a collection of mostly independent header files. There is, generally, nothing to link with. You can integrate this library in multiple ways:
+* Simply add the headers under the [include](include) directory to your include path and `#include` them as needed. 
+  (For your convenience, the official [Releases][releases] have a .tar.gz containing the headers plus license/version info.)
+* Via Xcode's "Add Package Dependencies". Point it to this repository URL. (And, no, you don't need to have any Swift in 
+  your project for this to work).
+* Using an XCFramework available from the [Releases][releases] page. Add it to your Xcode project.
+* Via CMake, using all the usual methods: FetchContent, add_subdirectory, install locally etc.
 
-The `sample` directory contains a sample that demonstrates the usage of main features.
+The `sample` directory contains a sample that demonstrates the usage of the main features.
 
 
 ### Convert ANY C++ callable to a block ###
@@ -45,7 +51,7 @@ This works and works great, but there are a few things that don't:
   });
   ```
   Neither can you pass a block that captures anything mutable (like your lambda) - captured variables are all const.
-* Your lambda captured variables are always *copied* into the block, not *moved*. If you have captures that are
+* Your lambda's captured variables are always *copied* into the block, not *moved*. If you have captures that are
   expensive to copy - oh well...
 * Because of the above you cannot have move-only things in your block. Forget about using `std::unique_ptr` for example.
 
@@ -91,10 +97,10 @@ dispatch_async(someQueue, makeBlock([ptr=std::move(ptr)]() {
 
 ```
 
-One important thing to keep in mind is that the object returned from `makeBlock`/`makeMutableBlock` **is the block**. It is NOT a block pointer (e.g. `Ret (^) (args)`) and it doesn't "store" the block pointer inside. The block's lifetime is this object's lifetime, and it ends when this object is destroyed. You can copy/move this object around and invoke it as any other C++ callable.
+One important thing to keep in mind is that the object returned from `makeBlock`/`makeMutableBlock` **is the block**. It is NOT a block pointer (e.g. `Ret (^) (args)`) and it doesn't "store" the block pointer inside. The block's lifetime is this object's lifetime, and it ends when this object is destroyed. You can copy/move this object around and invoke it like any other C++ callable.
 You can also convert it to the block _pointer_ as needed, either using implicit conversion or a `.get()` member function.
 
-In Objective-C++ the block pointer lifetime **in a single scope** is unrelated to the block object's lifetime. The Objective-C++ ARC machinery will do the 
+In Objective-C++ the block pointer's lifetime **in a single scope** is unrelated to the block object's lifetime. The Objective-C++ ARC machinery will do the 
 necessary magic behind the scenes. For example:
 
 ```c++
@@ -128,7 +134,7 @@ Block_release(block);
 ```
 
 `BlockUtil.h` also provides two helpers: `makeWeak` and `makeStrong` that simplify the "strongSelf" 
-casting dance around avoiding circular references when using blocks/lambdas.
+casting dance for avoiding circular references when using blocks/lambdas.
 
 Here is the intended usage:
 
@@ -143,7 +149,7 @@ dispatch_async(someQueue, [weakSelf = makeWeak(self)] () {
 
 ### Coroutines that execute on GCD dispatch queues ###
 
-Header `CoDispatch.h` allows you to use **asynchronous** C++ coroutines that execute on GCD dispatch queues. Yes, there is [this library](https://github.com/alibaba/coobjc) but it is big, targets Swift and Objective-C rather than C++/Objective-C++, and has a library to integrate with. It also has more features, of course. Here you get basic powerful C++ coroutine support in a single not very large (~800 loc) header.
+Header `CoDispatch.h` allows you to use **asynchronous** C++ coroutines that execute on GCD dispatch queues. Yes, there is [this library](https://github.com/alibaba/coobjc) but it is big, targets Swift and Objective-C rather than C++/Objective-C++, and has a library to link with. It also has more features, of course. Here you get basic but powerful C++ coroutine support in a single not very large (~800 loc) header.
 
 Working with coroutines is discussed in greater detail in [a separate doc](doc/CoDispatch.md).
 
@@ -217,7 +223,7 @@ int main() {
 }
 ```
 
-This facility can be used both from plain C++ (.cpp) and Objective-C++ (.mm) files. It is also available on Linux using [libdispatch][libdispatch] library (see [Linux notes](#linux-notes) below).
+This facility can be used both from plain C++ (.cpp) and Objective-C++ (.mm) files. It is also available on Linux using the [libdispatch][libdispatch] library (see [Linux notes](#linux-notes) below).
 
 
 ### Boxing of any C++ objects in Objective-C ones ###
@@ -226,7 +232,7 @@ Sometimes you want to store a C++ object where an Objective-C object is expected
 some `NSObject * tag` in which you really want to put an `std::vector` or something similar. You can,
 of course, do that by creating a wrapper Objective-C class that stores `std::vector` but it is a huge annoyance. Yet another Objective-C class to write, so you need to make a new header and a .mm file. There is all the boilerplate code for `init` and for value access. And, after all this work, the result is going to be `std::vector`-specific. If you later need to wrap another C++ class you need yet another, almost identical wrapper. 
 
-For plain C structs Objective-C has a solution: `NSValue` that can store any C struct and let you retrieve it back later. Unfortunately in C++ this only works for "trivially copyable" types (which more or less correspond to "plain C structs"). Trying to stick anything else in `NSValue` will appear to work, but likely do very bad things - it simply copies object bytes into it and out! Whether the bytes copied out will work as the original object is undefined.
+For plain C structs Objective-C has a solution: `NSValue` that can store any C struct and let you retrieve it back later. Unfortunately in C++ this only works for "trivially copyable" types (which more or less correspond to "plain C structs"). Trying to stick anything else in `NSValue` will appear to work, but will likely do very bad things - it simply copies object bytes into it and out! Whether the bytes copied out will work as the original object is undefined.
 
 To solve this issue `BoxUtil.h` provides generic facilities for wrapping and unwrapping of C++ objects in `NSObject`-derived classes without writing any code. Such wrapping and unwrapping of native objects in objects of a higher-level language is usually called "boxing" and "unboxing", hence the
 name of the header and its APIs. 
@@ -286,15 +292,15 @@ assert([box(5) compare:box(6)] == NSOrderingAscending);
 
 ### Comparators for Objective-C objects ###
 
-Header `NSObjectUtil.h` provides `NSObjectEqual` and `NSObjectHash` - functors that evaluate equality and hash code for any NSObject and allow them to be used as keys in `std::unordered_map` and `std::unordered_set` for example. These are implemented in terms of `isEqual` and `hash` methods of `NSObject`. 
+Header `NSObjectUtil.h` provides `NSObjectEqual` and `NSObjectHash` - functors that evaluate equality and hash code for any NSObject and allow them to be used as keys in `std::unordered_map` and `std::unordered_set` for example. These are implemented in terms of the `isEqual` and `hash` methods of `NSObject`. 
 
-Header `NSStringUtil.h` provides `NSStringLess` and `NSStringLocaleLess` comparators. These allow `NSString` objects to be used as keys in `std::map` or `std::set` as well as used in STL sorting and searching algorithms. 
+Header `NSStringUtil.h` provides `NSStringLess` and `NSStringLocaleLess` comparators. These allow `NSString` objects to be used as keys in `std::map` or `std::set` as well as in STL sorting and searching algorithms. 
 
-Additionally, it provides `NSStringEqual` comparator. This is more efficient than `NSObjectEqual` and is implemented in terms of `isEqualToString`.
+Additionally, it provides an `NSStringEqual` comparator. This is more efficient than `NSObjectEqual` and is implemented in terms of `isEqualToString`.
 
-Header `NSNumberUtil.h` provides `NSNumberLess` comparator. This allows `NSNumber` objects to be used as keys in `std::map` or `std::set` as well as used in STL sorting and searching algorithms.  
+Header `NSNumberUtil.h` provides an `NSNumberLess` comparator. This allows `NSNumber` objects to be used as keys in `std::map` or `std::set` as well as in STL sorting and searching algorithms.  
 
-Additionally, it provides `NSNumberEqual` comparator. This is more efficient than `NSObjectEqual` and is implemented in terms of `isEqualToNumber`. 
+Additionally, it provides an `NSNumberEqual` comparator. This is more efficient than `NSObjectEqual` and is implemented in terms of `isEqualToNumber`. 
 
 
 For all comparators, `nil`s are handled properly. A `nil` is equal to `nil` and is less than any non-`nil` object.
@@ -303,13 +309,13 @@ For all comparators, `nil`s are handled properly. A `nil` is equal to `nil` and 
 
 Header `NSObjectUtil.h` provides `operator<<` for any `NSObject` to print it to an `std::ostream`. This behaves similarly to the `%@` formatting flag by delegating either to `descriptionWithLocale:` or to `description`.
 
-Header `NSStringUtil.h` provides additional `operator<<` to print an `NSString` to an `std::ostream`. This outputs `UTF8String`.
+Header `NSStringUtil.h` provides an additional `operator<<` to print an `NSString` to an `std::ostream`. This outputs `UTF8String`.
 
 Both headers also provide `std::formatter`s with the same functionality if `std::format` is available in the standard library and
-`fmt::formatter` if a macro `NS_OBJECT_UTIL_USE_FMT` is defined. In the latter case, presence of `<fmt/format.h>` or `"fmt/format.h"` include file is required.
+`fmt::formatter` if a macro `NS_OBJECT_UTIL_USE_FMT` is defined. In the latter case, the presence of `<fmt/format.h>` or `"fmt/format.h"` include file is required.
 
-Note that since version 0.8 `fmt` library disallows formatting of any kind of naked pointers, whether they have custom formatter or not.
-(See https://github.com/fmtlib/fmt/issues/4037). Thus, to format ObjC pointers you need to use `fmt::nsptr` wrapper provided by this library
+Note that since version 0.8 the `fmt` library disallows formatting of any kind of naked pointers, whether they have a custom formatter or not.
+(See https://github.com/fmtlib/fmt/issues/4037). Thus, to format ObjC pointers you need to use the `fmt::nsptr` wrapper provided by this library
 and patterned after `fmt::ptr`. Here is a short example of printing an `NSObject *` using all 3 equivalent methods:
 
 ```cpp
@@ -353,7 +359,7 @@ Header `NSStringUtil.h` provides `makeNSString` and `makeCFString` functions tha
 
 and convert the input to `NSString`/`CFString`. They return `nil` on failure.
 
-Conversions from `char16_t` are exact and can only fail when out of memory. Conversions from other formats will fail also when encoding is invalid. Conversions from `char` assume UTF-8 and from `wchar_t`, UTF-32. 
+Conversions from `char16_t` are exact and can only fail when out of memory. Conversions from other formats will also fail when encoding is invalid. Conversions from `char` assume UTF-8 and from `wchar_t`, UTF-32. 
 
 To convert in the opposite direction the header provides `makeStdString<Char>` overloads. These accept:
 
@@ -361,15 +367,15 @@ To convert in the opposite direction the header provides `makeStdString<Char>` o
 * A pair of `NSStringCharAccess` iterators
 * Any range of `NSStringCharAccess` iterators
 
-They return an `std::basic_string<Char>`. A `nil` input produces an empty string.  Similar to above, conversions from `char16_t` are exact and conversions to other char types transcode from an appropriate UTF encoding. If the source `NSString *`/`CFStringRef` contains invalid UTF-16, the result is an empty string.
+They return an `std::basic_string<Char>`. A `nil` input produces an empty string.  Similar to the above, conversions from `char16_t` are exact and conversions to other char types transcode from an appropriate UTF encoding. If the source `NSString *`/`CFStringRef` contains invalid UTF-16, the result is an empty string.
 
 This functionality is available in both Objective-C++ and plain C++.
 
 ### XCTest assertions for C++ objects ###
 
-When using XCTest framework you might be tempted to use `XCTAssertEqual` and similar on C++ objects. While this works and is safe, you will quickly discover that when the tests fail you get a less-than-useful failure message that shows _raw bytes_ of the C++ object instead of any kind of logical description. This happens because in order to obtain the textual description of the value, `XCTAssertEqual` and friends stuff it into an `NSValue` and then query its description. And, as mentioned in [BoxUtil.h](#boxutilh) section, `NSValue` simply copies raw bytes of a C++ object. 
+When using the XCTest framework you might be tempted to use `XCTAssertEqual` and similar on C++ objects. While this works and is safe, you will quickly discover that when the tests fail you get a less-than-useful failure message that shows _raw bytes_ of the C++ object instead of any kind of logical description. This happens because in order to obtain the textual description of the value, `XCTAssertEqual` and friends stuff it into an `NSValue` and then query its description. And, as mentioned in the [BoxUtil.h](#boxing-of-any-c-objects-in-objective-c-ones) section, `NSValue` simply copies raw bytes of a C++ object. 
 
-While this is still safe, because nothing except the description is ever done with those bytes, the end result is hardly usable. To fix this `XCTestUtil.h` header provides the following replacement macros:
+While this is still safe, because nothing except the description is ever done with those bytes, the end result is hardly usable. To fix this, the `XCTestUtil.h` header provides the following replacement macros:
 
 - `XCTAssertCppEqual`
 - `XCTAssertCppNotEqual`
@@ -378,7 +384,7 @@ While this is still safe, because nothing except the description is ever done wi
 - `XCTAssertCppLessThan`
 - `XCTAssertCppLessThanOrEqual`
 
-These, in the case of failure, try to obtain description using the following methods:
+These, in the case of failure, try to obtain a description using the following methods:
 
 - If there is an ADL call `testDescription(obj)` that produces `NSString *`, use that.
 - Otherwise, if there is an ADL call `to_string(obj)` in `using std::to_string` scope, use that.
@@ -389,9 +395,9 @@ Thus, if an object is printable using the typical means, those will be automatic
 
 ## Linux notes ##
 
-`BlockUtil.h` and `CoDispatch.h` headers can also be used on Linux. Currently, this requires:
-* Clang 16 or above (for blocks support). See [this issue][gcc-blocks] for status of blocks support in GCC
-* [swift-corelibs-libdispatch][libdispatch] library. Note that **most likely you need to build it from source**. The versions available via various package managers (as of summer 2024) are very old and cannot be used.
+The `BlockUtil.h` and `CoDispatch.h` headers can also be used on Linux. Currently, this requires:
+* Clang 16 or above (for blocks support). See [this issue][gcc-blocks] for the status of blocks support in GCC
+* The [swift-corelibs-libdispatch][libdispatch] library. Note that **most likely you need to build it from source**. The versions available via various package managers (as of summer 2024) are very old and cannot be used.
 
 You must use:
 ```
@@ -414,3 +420,4 @@ For `BlockUtil.h` link with:
 
 [libdispatch]: https://github.com/apple/swift-corelibs-libdispatch
 [gcc-blocks]: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78352
+[releases]: https://github.com/gershnik/objc-helpers/releases

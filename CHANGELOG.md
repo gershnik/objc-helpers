@@ -7,7 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 - Support for consuming this library via Xcode packages (e.g. SwiftPM)
-- Support for consuming this library via an XCFramework 
+- Support for consuming this library via an XCFramework
+- Support for consuming this library via CMake
+
+### Changed
+- Library versioning scheme has changed to have 3 fields (for compatibility with SwiftPM)
 
 ## [3.6] - 2026-05-26
 
