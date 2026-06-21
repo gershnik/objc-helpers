@@ -39,7 +39,8 @@ let package = Package(
                 "doc",
                 "README.md",
                 "CHANGELOG.md",
-                "LICENSE"
+                "LICENSE",
+                "VERSION"
             ],
             // The only compiled translation unit.
             sources: [
