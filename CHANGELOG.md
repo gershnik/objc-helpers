@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+### Added
+- Support for consuming this library via Xcode packages (e.g. SwiftPM)
+- Support for consuming this library via an XCFramework 
+
 ## [3.6] - 2026-05-26
 
 ### Fixed

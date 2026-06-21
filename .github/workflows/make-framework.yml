@@ -1,0 +1,36 @@
+name: Make Framework
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Build XCFramework
+        run: python3 tools/make-xcframework.py build
+
+      - name: Sign XCFramework
+        env:
+            SIGN_CERTIFICATE: ${{ secrets.SIGN_CERTIFICATE }}
+            SIGN_CERTIFICATE_PWD: ${{ secrets.SIGN_CERTIFICATE_PWD }}
+            KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
+        run: |
+          .github/workflows/set-github-keychain
+          codesign --timestamp -s 'Developer ID Application' build/ObjCHelpers.xcframework
+
+      - name: Zip with ditto
+        # ditto preserves the header symlinks; actions/upload-artifact would not,
+        # which is why the zip is created here rather than uploading the dir.
+        run: ditto -c -k --keepParent build/ObjCHelpers.xcframework build/ObjCHelpers.xcframework.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ObjCHelpers-xcframework.zip
+          path: build/ObjCHelpers.xcframework.zip
+          if-no-files-found: error

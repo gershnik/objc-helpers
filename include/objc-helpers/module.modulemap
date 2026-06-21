@@ -1,0 +1,25 @@
+// Hand-written module map for objc-helpers.
+//
+// Why textual headers (and not a generated umbrella module)?
+//   * The headers require C++20 and some require Objective-C++ (__OBJC__).
+//   * They #include one another.
+// An auto-generated umbrella module makes Clang try to compile each header as a
+// standalone module member, which fails under those constraints. Declaring them
+// `textual` keeps `#include <objc-helpers/Foo.h>` working and lets Objective-C
+// clients `@import ObjCHelpers;` (headers are pulled in textually on demand).
+//
+// Paths are relative to this file's directory (the public-headers root,
+// i.e. `include/`), so each header is addressed as "objc-helpers/<Name>.h".
+//
+
+module ObjCHelpers {
+    textual header "objc-helpers/BlockUtil.h"
+    textual header "objc-helpers/BoxUtil.h"
+    textual header "objc-helpers/CoDispatch.h"
+    textual header "objc-helpers/NSNumberUtil.h"
+    textual header "objc-helpers/NSObjectUtil.h"
+    textual header "objc-helpers/NSStringUtil.h"
+    textual header "objc-helpers/XCTestUtil.h"
+
+    export *
+}
