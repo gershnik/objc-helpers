@@ -31,14 +31,14 @@ jobs:
     - name: Download framework
       uses: actions/download-artifact@v8
       with:
-        name: ObjCHelpers-xcframework.zip
+        name: ObjCHelpers.xcframework.zip
         path: '.'
 
     - name: Package artifacts
       shell: bash
       run: |
         tar -czf objc-helpers-${{ env.RELEASE_NAME }}.tar.gz include LICENSE VERSION CHANGELOG.md
-        mv ObjCHelpers-xcframework.zip ObjCHelpers-xcframework-${{ env.RELEASE_NAME }}.zip 
+        mv ObjCHelpers.xcframework.zip ObjCHelpers.xcframework-${{ env.RELEASE_NAME }}.zip 
 
     - name: Make release
       uses: softprops/action-gh-release@v3
@@ -49,5 +49,5 @@ jobs:
         body: ...edit me...
         files: |
           objc-helpers-${{ env.RELEASE_NAME }}.tar.gz
-          ObjCHelpers-xcframework-${{ env.RELEASE_NAME }}.zip
+          ObjCHelpers.xcframework-${{ env.RELEASE_NAME }}.zip
   
