@@ -1,0 +1,7 @@
+.cmake/**  linguist-detectable=false
+.tools/**  linguist-detectable=false
+test/**  linguist-detectable=false
+stub/**  linguist-detectable=false
+CMakeLists.txt linguist-detectable=false
+Package.swift linguist-detectable=false
+*.h  linguist-language=Objective-C++
