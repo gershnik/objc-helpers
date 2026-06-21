@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Build XCFramework
-        run: python3 tools/make-xcframework.py build
+        run: python3 .tools/make-xcframework.py build
 
       - name: Sign XCFramework
         env:
