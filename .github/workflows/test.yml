@@ -10,10 +10,14 @@ on:
       - '.gitignore'
       - 'LICENSE'
       - 'CHANGELOG.md'
+      - 'VERSION'
       - 'doc/**'
       - 'sample/**'
-      - 'tools/create-release.py'
+      - '.tools/create-release.py'
+      - '.tools/make-xcframework.py'
       - '.github/workflows/publish.yml'
+      - '.github/workflows/make-framework.yml'
+      - '.github/workflows/set-github-keychain'
 
 jobs:
   mac:
