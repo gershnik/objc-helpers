@@ -30,6 +30,8 @@ with open(ROOT / "CHANGELOG.md", "rt", encoding='utf-8') as change_log:
 with open(ROOT / "CHANGELOG.md", "wt", encoding='utf-8') as change_log:
     change_log.writelines(lines)
 
-subprocess.run(['git', 'add', ROOT / "CHANGELOG.md"], check=True)
+(ROOT / "VERSION").write_text(f'{NEW_VER}\n')
+
+subprocess.run(['git', 'add', ROOT / "CHANGELOG.md", ROOT / "VERSION"], check=True)
 subprocess.run(['git', 'commit', '-m', f'chore: creating version {NEW_VER}'], check=True)
 subprocess.run(['git', 'tag', f'v{NEW_VER}'], check=True)
