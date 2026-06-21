@@ -40,7 +40,8 @@ let package = Package(
                 "README.md",
                 "CHANGELOG.md",
                 "LICENSE",
-                "VERSION"
+                "VERSION",
+                "CMakeLists.txt"
             ],
             // The only compiled translation unit.
             sources: [

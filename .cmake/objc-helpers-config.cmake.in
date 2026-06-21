@@ -1,0 +1,14 @@
+# Copyright 2020 Eugene Gershnik
+#
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file or at
+# https://github.com/gershnik/objc-helpers/blob/main/LICENSE
+
+
+@PACKAGE_INIT@
+
+
+# Avoid repeatedly including the targets
+if(NOT TARGET objc-helpers::objc-helpers)
+    include(${CMAKE_CURRENT_LIST_DIR}/objc-helpers-exports.cmake)
+endif()

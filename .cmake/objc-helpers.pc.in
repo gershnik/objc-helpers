@@ -1,0 +1,9 @@
+prefix=${pcfiledir}/@FROM_PCFILEDIR_TO_PREFIX@
+exec_prefix=${prefix}
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: objc-helpers
+Description: A collection of utilities to make coding on Apple platforms in C++ or Objective-C++ more pleasant.
+Version: @PROJECT_VERSION@
+Cflags: -I${includedir}
+
