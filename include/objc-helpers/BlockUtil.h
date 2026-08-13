@@ -236,12 +236,12 @@ namespace BlockUtil
             
 #ifdef __OBJC__
             friend auto copy(const BlockWithCallable & obj) -> BlockType {
-                auto dummy = (BlockType)obj;
+                BlockType dummy = obj;
                 return dummy;
             }
             friend auto copy(BlockWithCallable && obj) -> BlockType {
                 obj.copyCanBeMove = true;
-                auto dummy = (BlockType)obj;
+                BlockType dummy = obj;
                 return dummy;
             }
 #else
