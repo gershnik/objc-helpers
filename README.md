@@ -259,6 +259,14 @@ auto & vec = boxedValue<std::vector<int>>(obj1);
 assert(vec.size() == 3);
 assert(vec[1] == 2);
 
+//If you aren't sure whether the object is a boxed value of a certain
+//type you can check-and-get it by pointer. This will return nullptr
+//on failure
+if (auto * vec = addressOfBoxedValue<std::vector<int>>(obj1)) {
+    assert(vec->size() == 3);
+    assert((*vec)[1] == 2);
+} 
+
 //The reference you get back is mutable by default. If you want immutability do this:
 NSObject * immutableObj = box<const std::vector<int>>(...any of the stuff above...);
 
