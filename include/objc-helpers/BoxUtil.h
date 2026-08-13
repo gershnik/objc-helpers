@@ -336,6 +336,16 @@ public:
         auto * val = (T *)classData.addrOfValue(obj);
         return *val;
     }
+    
+    static auto addressOfBoxedValue(BoxedType obj) -> T * __nullable {
+        auto & classData = getClassData();
+        
+        if (obj.class != classData.cls) {
+            return nullptr;
+        }
+        
+        return (T *)classData.addrOfValue(obj);
+    }
 };
 
 /**
@@ -389,5 +399,12 @@ inline auto box(T && src) -> typename BoxMaker<std::remove_cvref_t<T>>::BoxedTyp
 template<class T>
 inline auto boxedValue(typename BoxMaker<T>::BoxedType obj) -> T &
     { return BoxMaker<T>::boxedValue(obj); }
+
+/**
+ Retrieve a reference to the boxed value
+ */
+template<class T>
+inline auto addressOfBoxedValue(typename BoxMaker<T>::BoxedType obj) -> T * __nullable
+    { return BoxMaker<T>::addressOfBoxedValue(obj); }
 
 #endif

@@ -24,6 +24,10 @@ TEST_CASE( "integer" ) {
         CHECK([exc.name isEqualToString:NSInvalidArgumentException]);
     }
     
+    CHECK(addressOfBoxedValue<long>(obj) == nullptr);
+    CHECK(addressOfBoxedValue<int>(obj) != nullptr);
+    CHECK(*addressOfBoxedValue<int>(obj) == 42);
+    
     auto objc = (decltype(obj))[obj copy];
     CHECK(boxedValue<int>(objc) == 42);
     
