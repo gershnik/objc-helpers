@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   contains a given boxed type and returns pointer to it (or null if not).
 
 ### Fixed
+- Boxed objects are properly dealloc-ed now
 - `copy(makeBlock(...))` now works again with newer Xcode/clang
 
 ## [3.7.0] - 2026-06-20
