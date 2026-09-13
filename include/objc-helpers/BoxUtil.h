@@ -85,10 +85,12 @@ namespace BoxMakerDetail __attribute__((visibility("hidden"))) {
             
             Class NSObjectClass = NSObject.class;
             id (*NSObject_initIMP)(id, SEL);
+            void (*NSObject_deallocIMP)(id, SEL);
             std::string modulePrefix;
             
             ObjcData(const void * sym):
-                NSObject_initIMP((decltype(NSObject_initIMP))class_getMethodImplementation(NSObjectClass, initSel)) {
+                NSObject_initIMP((decltype(NSObject_initIMP))class_getMethodImplementation(NSObjectClass, initSel)),
+                NSObject_deallocIMP((decltype(NSObject_deallocIMP))class_getMethodImplementation(NSObjectClass, deallocSel)) {
                     
                 Dl_info info;
                 if (!dladdr(sym, &info))
@@ -226,11 +228,13 @@ private:
         @throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"calling init on this object is not allowed" userInfo:nullptr];
     }
     
-    static void dealloc(id __nonnull self, SEL __nonnull) {
+    static void dealloc(id __nonnull __unsafe_unretained self, SEL __nonnull sel) {
         auto & classData = getClassData();
         auto * val = (T *)classData.addrOfValue(self);
         
         val->~T();
+        auto & objcData = BoxMakerDetail::getObjcData();
+        objcData.NSObject_deallocIMP(self, sel);
     }
     
     static auto description(id __nonnull self, SEL __nonnull) -> NSString * __nonnull {
