@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## [3.8.0] - 2026-09-19
+
 ### Added
 - `addressOfBoxedValue` in BoxUtil that allows to check whether the passed object
   contains a given boxed type and returns pointer to it (or null if not).
@@ -148,3 +150,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 [3.5]: https://github.com/gershnik/objc-helpers/releases/v3.5
 [3.6]: https://github.com/gershnik/objc-helpers/releases/v3.6
 [3.7.0]: https://github.com/gershnik/objc-helpers/releases/v3.7.0
+[3.8.0]: https://github.com/gershnik/objc-helpers/releases/v3.8.0
